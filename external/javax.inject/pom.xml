@@ -11,8 +11,8 @@
   <properties>
     <bundle.symbolicName>javax.inject</bundle.symbolicName>
     <wrapped.groupId>javax.inject</wrapped.groupId>
-    <wrapped.artifactId>inject</wrapped.artifactId>
-    <wrapped.version>1.0</wrapped.version>
+    <wrapped.artifactId>javax.inject</wrapped.artifactId>
+    <wrapped.version>1</wrapped.version>
   </properties>
 
   <modelVersion>4.0.0</modelVersion>
