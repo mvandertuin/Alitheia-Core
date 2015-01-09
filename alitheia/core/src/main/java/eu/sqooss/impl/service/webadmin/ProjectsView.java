@@ -61,29 +61,29 @@ import eu.sqooss.service.updater.UpdaterService.UpdaterStage;
 
 public class ProjectsView extends AbstractView {
     // Script for submitting this page
-    private static String SUBMIT = "document.projects.submit();";
+    static String SUBMIT = "document.projects.submit();";
 
     // Action parameter's values
-    private static String ACT_REQ_ADD_PROJECT   = "reqAddProject";
-    private static String ACT_CON_ADD_PROJECT   = "conAddProject";
-    private static String ACT_REQ_REM_PROJECT   = "reqRemProject";
-    private static String ACT_CON_REM_PROJECT   = "conRemProject";
-    private static String ACT_REQ_SHOW_PROJECT  = "conShowProject";
-    private static String ACT_CON_UPD_ALL       = "conUpdateAll";
-    private static String ACT_CON_UPD           = "conUpdate";
-    private static String ACT_CON_UPD_ALL_NODE  = "conUpdateAllOnNode";
+    static String ACT_REQ_ADD_PROJECT   = "reqAddProject";
+    static String ACT_CON_ADD_PROJECT   = "conAddProject";
+    static String ACT_REQ_REM_PROJECT   = "reqRemProject";
+    static String ACT_CON_REM_PROJECT   = "conRemProject";
+    static String ACT_REQ_SHOW_PROJECT  = "conShowProject";
+    static String ACT_CON_UPD_ALL       = "conUpdateAll";
+    static String ACT_CON_UPD           = "conUpdate";
+    static String ACT_CON_UPD_ALL_NODE  = "conUpdateAllOnNode";
 
     // Servlet parameters
-    private static String REQ_PAR_ACTION        = "reqAction";
-    private static String REQ_PAR_PROJECT_ID    = "projectId";
-    private static String REQ_PAR_PRJ_NAME      = "projectName";
-    private static String REQ_PAR_PRJ_WEB       = "projectHomepage";
-    private static String REQ_PAR_PRJ_CONT      = "projectContact";
-    private static String REQ_PAR_PRJ_BUG       = "projectBL";
-    private static String REQ_PAR_PRJ_MAIL      = "projectML";
-    private static String REQ_PAR_PRJ_CODE      = "projectSCM";
-    private static String REQ_PAR_SYNC_PLUGIN   = "reqParSyncPlugin";
-    private static String REQ_PAR_UPD           = "reqUpd";
+    static String REQ_PAR_ACTION        = "reqAction";
+    static String REQ_PAR_PROJECT_ID    = "projectId";
+    static String REQ_PAR_PRJ_NAME      = "projectName";
+    static String REQ_PAR_PRJ_WEB       = "projectHomepage";
+    static String REQ_PAR_PRJ_CONT      = "projectContact";
+    static String REQ_PAR_PRJ_BUG       = "projectBL";
+    static String REQ_PAR_PRJ_MAIL      = "projectML";
+    static String REQ_PAR_PRJ_CODE      = "projectSCM";
+    static String REQ_PAR_SYNC_PLUGIN   = "reqParSyncPlugin";
+    static String REQ_PAR_UPD           = "reqUpd";
     
     /**
      * Instantiates a new projects view.
