@@ -113,8 +113,6 @@ public class AlitheiaCore {
    
     /**
      * Simple constructor.
-     * 
-     * @param bc The parent bundle's context object.
      */
     public AlitheiaCore() {
         instance = this;
