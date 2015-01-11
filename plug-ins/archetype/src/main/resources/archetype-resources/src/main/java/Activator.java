@@ -3,14 +3,14 @@
  * compile time to the source, any OSS license (even GPL) will do.
  */
 
-package ${groupId}.${artifactId};
+package ${project.groupId}.${project.artifactId};
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import eu.sqooss.core.AlitheiaCore;
-import ${groupId}.${artifactId}.SkelAccessor;
-import ${groupId}.${artifactId}.SkelUpdater;
+import ${project.groupId}.${project.artifactId}.SkelAccessor;
+import ${project.groupId}.${project.artifactId}.SkelUpdater;
 import eu.sqooss.service.tds.TDSService;
 import eu.sqooss.service.updater.UpdaterService;
 
