@@ -1,19 +1,25 @@
 package eu.sqooss.test.service.scheduler;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import eu.sqooss.impl.service.logging.LogManagerModule;
+import eu.sqooss.impl.service.scheduler.SchedulerServiceModule;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import eu.sqooss.impl.service.scheduler.SchedulerServiceImpl;
 import eu.sqooss.service.scheduler.SchedulerException;
+import org.mockito.Mock;
 
 public class SchedulerTests {
-    
+
     static SchedulerServiceImpl sched;
-    
+
     @BeforeClass
     public static void setUp() {
-        sched = new SchedulerServiceImpl(null);
+        Injector injector = Guice.createInjector(new LogManagerModule(), new SchedulerServiceModule());
+        sched = injector.getInstance(SchedulerServiceImpl.class);
         sched.startExecute(2);
     }
 
