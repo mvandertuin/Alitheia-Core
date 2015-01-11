@@ -151,21 +151,25 @@ public class AddProject extends AdminActionBase {
             a.getSCMAccessor().getHeadRevision();
             debug("SCM accessor OK. SCM Head: " + 
             		a.getSCMAccessor().getHeadRevision().getUniqueId());
-            
-            debug("Testing BTS accessor for project: " + name);
-            BTSAccessor ba = a.getBTSAccessor();
-            if (ba == null) {
-                warn("tds.bts.url", "Bug Accessor failed initialization for URI:" + bts);
-            } else {
-            	debug("BTS accessor OK.");
+
+            if(bts != null && !bts.isEmpty()) {
+                debug("Testing BTS accessor for project: " + name);
+                BTSAccessor ba = a.getBTSAccessor();
+                if (ba == null) {
+                    warn("tds.bts.url", "Bug Accessor failed initialization for URI:" + bts);
+                } else {
+                    debug("BTS accessor OK.");
+                }
             }
 
-            debug("Testing mail accessor for project: " + name);
-            MailAccessor ma = a.getMailAccessor();
-            if (ma == null) {
-                warn("tds.mail.maildir", "Mail accessor failed initialization for URI:" + bts);
-            } else {
-            	debug("Mail accessor OK.");
+            if(mail != null && !mail.isEmpty()){
+                debug("Testing mail accessor for project: " + name);
+                MailAccessor ma = a.getMailAccessor();
+                if (ma == null) {
+                    warn("tds.mail.maildir", "Mail accessor failed initialization for URI:" + mail);
+                } else {
+                    debug("Mail accessor OK.");
+                }
             }
         } catch (InvalidRepositoryException ire) {
             error("tds.scm.url", "No appropriate accessor for repository URI: "+ scm);
