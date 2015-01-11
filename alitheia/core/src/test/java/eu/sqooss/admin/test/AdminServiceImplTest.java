@@ -4,6 +4,9 @@ import static org.junit.Assert.*;
 
 import java.util.Set;
 
+import com.google.inject.Inject;
+import eu.sqooss.service.db.DBService;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -12,16 +15,24 @@ import eu.sqooss.impl.service.admin.AdminServiceImpl.ActionContainer;
 import eu.sqooss.service.admin.AdminAction;
 import eu.sqooss.service.admin.AdminAction.AdminActionStatus;
 import eu.sqooss.service.admin.actions.RunTimeInfo;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class AdminServiceImplTest {
 
-    static AdminServiceImpl impl;
+    @Mock
+    private DBService db;
+
+    private AdminServiceImpl impl;
     static long failid;
     static long successid;
 
-    @BeforeClass
-    public static void setUp() {
-        impl = new AdminServiceImpl(null);
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        impl = new AdminServiceImpl(db);
+        registerAdminActions();
     }
 
     @Test
@@ -29,8 +40,12 @@ public class AdminServiceImplTest {
         assertNotNull(impl);
     }
 
-    @Test
-    public void testRegisterAdminAction() {
+    // Relying on tests running in sequence is Bad Practice,
+    // however for now AdminServiceImpl has a static list of actions
+    public void registerAdminActions() {
+        if(impl.getAdminActions().size() == 3)
+            return;
+
         RunTimeInfo rti = new RunTimeInfo();
         impl.registerAdminAction(rti.mnemonic(), RunTimeInfo.class);
         assertEquals(1, impl.getAdminActions().size());
@@ -67,22 +82,35 @@ public class AdminServiceImplTest {
         assertNull(fail.results());
         failid = fail.id();
     }
+
+    // The following tests need this repeatedly
+    private AdminAction success(){
+        AdminAction success = impl.create("win");
+        if(success != null)
+            impl.execute(success);
+        return success;
+    }
+
+    // The following tests need this repeatedly
+    private AdminAction fail(){
+        AdminAction fail = impl.create("fail");
+        if(fail != null)
+            impl.execute(fail);
+        return fail;
+    }
     
     @Test
     public void testExecute() {
-        AdminAction success = impl.create("win");
+        AdminAction success = success();
         assertNotNull(success);
-        impl.execute(success);
-        
+
         assertNull(success.errors());
         assertEquals("#win", success.results().get("1"));
         assertEquals(AdminActionStatus.FINISHED, success.status());
-        successid = success.id();
-        
-        AdminAction fail = impl.create("fail");
+
+        AdminAction fail = fail();
         assertNotNull(fail);
-        impl.execute(fail);
-        
+
         assertNull(fail.results());
         assertEquals("#fail", fail.errors().get("1"));
         assertEquals(AdminActionStatus.ERROR, fail.status());
@@ -91,15 +119,19 @@ public class AdminServiceImplTest {
     
     @Test
     public void testShow() {
-        AdminAction aa = impl.show(failid);
+        AdminAction aa = impl.show(fail().id());
         assertNotNull(aa);
         
-        aa = impl.show(successid);
+        aa = impl.show(success().id());
         assertNotNull(aa);
     }
     
     @Test
     public void testGC() {
+        impl.registerAdminAction(new FailingAction().mnemonic(), FailingAction.class);
+        fail();
+        fail();
+
         try {
             Thread.sleep (300);
         } catch (InterruptedException e) {}
