@@ -42,7 +42,7 @@
 ** *ESSENTIAL* that the package name contain the string '.metrics.'
 ** because this is how Alitheia Core discovers the metric plug-ins. 
 */
-package ${groupId}.${artifactId};
+package ${project.groupId}.${project.artifactId};
 
 import java.util.List;
 
