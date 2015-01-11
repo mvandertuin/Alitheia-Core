@@ -33,10 +33,7 @@
 
 package eu.sqooss.service.db;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -126,7 +123,16 @@ public class ClusterNode extends DAObject {
         catch(java.net.UnknownHostException ex) {
             hostname = "unknown host";
         }       
-        
-        return getClusteNodeByName(hostname);
+
+        ClusterNode node = getClusteNodeByName(hostname);
+
+        // If the current node does not yet exist in the db: create one
+        if(node == null) {
+            node = new ClusterNode(hostname);
+            node.setProjects(Collections.<StoredProject>emptySet());
+            AlitheiaCore.getInstance().getDBService().addRecord(node);
+        }
+
+        return node;
     }
 }
