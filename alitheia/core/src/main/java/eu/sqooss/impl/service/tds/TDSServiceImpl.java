@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.framework.BundleContext;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import eu.sqooss.core.AlitheiaCoreService;
 import eu.sqooss.service.db.ClusterNode;
@@ -50,6 +51,7 @@ import eu.sqooss.service.tds.ProjectAccessor;
 import eu.sqooss.service.tds.TDSService;
 import eu.sqooss.service.util.URIUtills;
 
+@Singleton
 public class TDSServiceImpl implements TDSService, AlitheiaCoreService {
     private Logger logger = null;
     private ConcurrentHashMap<Long, ProjectDataAccessorImpl> accessorPool;
