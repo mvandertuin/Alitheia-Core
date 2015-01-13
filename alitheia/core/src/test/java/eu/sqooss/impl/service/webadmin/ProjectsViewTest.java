@@ -14,7 +14,7 @@ import eu.sqooss.service.updater.Updater;
 import eu.sqooss.service.updater.UpdaterService;
 import junit.framework.ComparisonFailure;
 import org.apache.velocity.VelocityContext;
-import org.hamcrest.text.IsEqualIgnoringWhiteSpace;
+//import org.hamcrest.text.IsEqualIgnoringWhiteSpace;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
