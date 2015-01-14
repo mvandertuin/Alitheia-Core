@@ -569,6 +569,10 @@ public abstract class AbstractView {
      * ViewModels for in Velocity templates
      */
     public class Table {
+        public Row[] getRows() {
+            return rows;
+        }
+
         public Row[] rows;
 
         public Table(Row... rows){
@@ -596,7 +600,8 @@ public abstract class AbstractView {
             return value;
         }
 
-        public InputRow(String name, String value){
+        public InputRow(String title, String name, String value){
+            this.title = title;
             this.name = name;
             this.value = value;
         }
@@ -608,7 +613,8 @@ public abstract class AbstractView {
         }
 
         public String value;
-        public InfoRow(String value){
+        public InfoRow(String title, String value){
+            this.title = title;
             this.value = value;
         }
     }
