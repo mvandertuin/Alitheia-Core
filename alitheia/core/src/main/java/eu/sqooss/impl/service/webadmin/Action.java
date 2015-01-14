@@ -14,4 +14,7 @@ public @interface Action {
     public String template();
 
     public String method() default "GET";
+
+    public static final String GET = "GET";
+    public static final String POST = "GET";
 }
