@@ -1,0 +1,88 @@
+<fieldset>
+	<legend>$plugin.getPluginName()</legend>
+
+	<table>
+	<thead>
+        <tr class="head">
+            <td class="head" style="width: 80px;">Status</td>
+            <td class="head" style="width: 30%;">Name</td>
+            <td class="head" style="width: 40%;">Class</td>
+            <td class="head">Version</td>
+         </tr>
+     </thead>
+     <tbody>
+		<tr>
+			<td>
+				#if($plugin.getInstalled())
+				Installed
+				#else
+				Registered
+				#end
+			</td>
+			<td>$plugin.getPluginName()</td>
+			<td>$metrics.getPluginClass($plugin)</td>
+     		<td>$plugin.getPluginVersion()</td>
+     	</tr>
+     	<tr>
+     		<td colspan="4">
+     			<input type="button" class="install" style="width:100px;" value="Plug-ins list"
+     			onclick="javascript:document.getElementById('$reqParHashcode').value='';document.metrics.submit();">
+     				#if	($plugin.getInstalled())
+     					<input type="button" class="install" style="width:100px;" value="Uninstall"
+     					onclick="javascript:document.getElementById('$reqParAction').value='$actValUninstall';
+     					document.getElementById('$reqParHashcode').value='$plugin.getHashcode()';document.metrics.submit();">
+     					<input type="button" class="install" style="width:100px;" value="Synchronise"
+     					onclick="javascript:document.getElementById('$reqParAction').value='$actValSync';
+     					document.getElementById('$reqParHashcode').value='$plugin.getHashcode()';document.metrics.submit();">
+					#else
+						<input type="button" class="install" style="width:100px;" value="Install"
+     					onclick="javascript:document.getElementById('$reqParAction').value='$actValInstall';
+     					document.getElementById('$reqParHashcode').value='$plugin.getHashcode()';document.metrics.submit();">		
+					#end
+				</td>
+			</tr>
+		</tbody>
+		</table>			
+</fieldset>
+#if($plugin.getInstalled())
+ <fieldset>
+ 	<legend>Supported metrics</legend>
+ 	<table>
+	<thead>
+        <tr class="head">
+            <td class="head" style="width: 10%;">Id</td>
+            <td class="head" style="width: 25%;">Name</td>
+            <td class="head" style="width: 25%;">Type</td>
+            <td class="head" style="width: 40%;">Description</td>
+         </tr>
+     </thead>
+     <tbody>	
+     	#if($!metrics || $metrics.isEmpty())
+     	<tr>
+     		<td colspan="4" class="noattr">This plug-in does not support metrics."</td>
+     	</tr>
+     	#else
+     		#foreach($metric in $metrics)
+     			<tr>
+     				<td>$metric.getId()</td>
+     				<td>$metric.getMnemonic()</td>
+     				<td>$metric.getMetricType().getType()</td>
+     				<td>$metric.getDescription()</td>
+     		#end
+     	#end
+     </tbody>
+     </table>
+    </fieldset>
+    <fieldset>
+    	<legend>"Configuration properties"</legend>
+    	<table>
+    		<thead>
+        		<tr class="head">
+            		<td class="head" style="width: 30%;">Name</td>
+            		<td class="head" style="width: 20%;">Type</td>
+            		<td class="head" style="width: 50%;">Value</td>
+         		</tr>
+     		</thead>
+     		<tbody>
+    		
+#end
