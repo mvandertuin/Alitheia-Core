@@ -33,13 +33,11 @@
 
 package eu.sqooss.impl.service.webadmin;
 
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.http.protocol.HTTP;
 import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 
@@ -62,7 +60,6 @@ import eu.sqooss.service.pa.PluginAdmin;
 import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.scheduler.SchedulerException;
-import eu.sqooss.service.updater.Updater;
 import eu.sqooss.service.updater.UpdaterService;
 import eu.sqooss.service.updater.UpdaterService.UpdaterStage;
 
@@ -105,15 +102,15 @@ public class ProjectsView extends AbstractView {
     /**
      * Instantiates a new projects view.
      *
-     * @param bundlecontext the <code>BundleContext</code> object
      * @param vc the <code>VelocityContext</code> object
+     * @param bundlecontext the <code>BundleContext</code> object
      */
     @Inject
-    public ProjectsView(@Assisted BundleContext bundlecontext, @Assisted VelocityContext vc,
-            DBService db, Scheduler sched, MetricActivator ma, PluginAdmin pa, 
-            UpdaterService updater, ClusterNodeService clusterNode, AdminService admin, 
-            ProjectDeleteJobFactory projDelJobFactory) {
-        super(bundlecontext, vc);
+    public ProjectsView(@Assisted BundleContext bundlecontext,
+                        DBService db, Scheduler sched, MetricActivator ma, PluginAdmin pa,
+                        UpdaterService updater, ClusterNodeService clusterNode, AdminService admin,
+                        ProjectDeleteJobFactory projDelJobFactory) {
+        super(bundlecontext);
         this.db = db;
         this.sched = sched;
         this.ma = ma;
@@ -124,12 +121,140 @@ public class ProjectsView extends AbstractView {
         this.projDelJobFactory = projDelJobFactory;
     }
 
+    private StoredProject selectedProject(HttpServletRequest req){
+        if(req.getParameter(REQ_PAR_PROJECT_ID) != null)
+            return StoredProject.loadDAObyId(new Long(req.getParameter(REQ_PAR_PROJECT_ID)), StoredProject.class);
+        return null;
+    }
+
+    protected void general(HttpServletRequest req, VelocityContext vc, StoredProject selProject){
+        // Initialize the resource bundles with the request's locale
+        initResources(req.getLocale());
+
+        // Get this clusters projects
+        Set<StoredProject> projects = ClusterNode.thisNode().getProjects();
+        // Get the metrics
+        Collection<PluginInfo> metrics = pa.listPlugins();
+
+        // Prepare list of projects
+        List<ProjectViewModel> projs = new ArrayList<>();
+        for (StoredProject nextPrj : projects) {
+            if(nextPrj == null) break;
+
+            ProjectVersion v = ProjectVersion.getLastProjectVersion(nextPrj);
+            MailMessage mm = MailMessage.getLatestMailMessage(nextPrj);
+            Bug bug = Bug.getLastUpdate(nextPrj);
+
+            projs.add(new ProjectViewModel(
+                    selProject != null && selProject.getId() == nextPrj.getId(),
+                    nextPrj.getId(),
+                    nextPrj.getName(),
+                    v == null ? getLbl("l0051") : String.valueOf(v.getSequence()) + "(" + v.getRevisionId() + ")",
+                    mm == null ? getLbl("l0051") : mm.getSendDate() + "",
+                    bug == null ? getLbl("l0051") : bug.getBugID(),
+                    nextPrj.isEvaluated() ? getLbl("project_is_evaluated") : getLbl("project_not_evaluated"),
+                    nextPrj.getClusternode() != null ? nextPrj.getClusternode().getName() : "(local)",
+                    metrics
+            ));
+        }
+
+        // Prepare list of updaters
+        if(selProject != null) {
+            vc.put("updatersImport", updater.getUpdaters(selProject, UpdaterStage.IMPORT));
+            vc.put("updatersParse", updater.getUpdaters(selProject, UpdaterStage.PARSE));
+            vc.put("updatersInference", updater.getUpdaters(selProject, UpdaterStage.INFERENCE));
+            vc.put("updatersDefault", updater.getUpdaters(selProject, UpdaterStage.DEFAULT));
+        }
+
+        vc.put("hostname", clusterNode.getClusterNodeName());
+
+        vc.put("projectModels", projs);
+    }
+
     @Action(uri = "/projects", template = "projects.html")
-    public void list(HttpServletRequest req, VelocityContext vc){
-        System.out.println("Executing ACTION!! DAMNIT!! DONE!!");
+    public void list(HttpServletRequest req, VelocityContext vc)
+    {
+        StoredProject selProject = selectedProject(req);
+        vc.put("selectedProject", selProject);
+
+        if(selProject == null)
+            vc.put("subtemplate", "projects/list.html");
+        else
+            vc.put("subtemplate", "projects/edit.html");
+
+        general(req, vc, selProject);
+    }
+
+    @Action(uri = "/projects_add", template = "projects.html")
+    public void add(HttpServletRequest req, VelocityContext vc)
+    {
+        vc.put("subtemplate", "projects/add.html");
+    }
+
+    @Action(uri = "/projects_add", template = "projects.html", method = "POST")
+    public void addPost(HttpServletRequest req, VelocityContext vc)
+    {
+        StringBuilder e = new StringBuilder();
+        StoredProject proj = addProject(e, req, 0);
+
+        if(proj == null){
+            vc.put("subtemplate", "errormessage.html");
+            vc.put("RESULTS", e);
+        } else {
+            vc.put("subtemplate", "projects/edit.html");
+            general(req, vc, proj);
+        }
+    }
+
+    @Action(uri = "/projects_diradd", template = "projects.html", method = "POST")
+    public void addDirectoryPost(HttpServletRequest req, VelocityContext vc)
+    {
+        AdminAction aa = admin.create(AddProject.MNEMONIC);
+        aa.addArg("dir", req.getParameter("properties"));
+        admin.execute(aa);
+
+        if(aa.hasErrors()){
+            vc.put("subtemplate", "errormessage.html");
+            vc.put("RESULTS", aa.hasErrors());
+        } else {
+            vc.put("subtemplate", "projects/edit.html");
+            general(req, vc, StoredProject.getProjectByName(req.getParameter(REQ_PAR_PRJ_NAME)));
+        }
+    }
+
+    @Action(uri = "/projects_delete", template = "projects.html", method = "GET")
+    public void deleteConfirm(HttpServletRequest req, VelocityContext vc)
+    {
+        StoredProject selProject = selectedProject(req);
+        vc.put("selectedProject", selProject);
+        vc.put("subtemplate", "projects/delete_confirm.html");
+    }
+
+    @Action(uri = "/projects_delete", template = "projects.html", method = "POST")
+    public void deleteConfirmed(HttpServletRequest req, VelocityContext vc){
         vc.put("subtemplate", "projects/list.html");
 
-        
+        StoredProject selProject = selectedProject(req);
+        StringBuilder e = new StringBuilder();
+//        selProject = removeProject(e, selProject, 0);
+//        if(selProject == null){
+//            // OK
+//        }
+
+        System.out.println("[POST] DELETE");
+    }
+
+    @Action(uri = "projects_update", template = "projects.html", method = "POST")
+    public void update(HttpServletRequest req, VelocityContext vc){
+        vc.put("subtemplate", "projects/list.html");
+        String scope = req.getParameter("scope");
+        System.out.println("[POST] UPDATE "+scope);
+    }
+
+    @Action(uri = "projects_sync", template = "projects.html", method = "POST")
+    public void sync(HttpServletRequest req, VelocityContext vc){
+        vc.put("subtemplate", "projects/list.html");
+        System.out.println("[POST] SYNC");
     }
 
     /**
@@ -207,13 +332,13 @@ public class ProjectsView extends AbstractView {
     	aa.addArg("web", r.getParameter(REQ_PAR_PRJ_WEB));
     	admin.execute(aa);
     	
-    	if (aa.hasErrors()) {
-            vc.put("RESULTS", aa.errors());
-            return null;
-    	} else { 
-            vc.put("RESULTS", aa.results());
+//    	if (aa.hasErrors()) {
+//            vc.put("RESULTS", aa.errors());
+//            return null;
+//    	} else {
+//            vc.put("RESULTS", aa.results());
             return StoredProject.getProjectByName(r.getParameter(REQ_PAR_PRJ_NAME));
-    	}
+//    	}
     }
     
     // ---------------------------------------------------------------
@@ -247,11 +372,11 @@ public class ProjectsView extends AbstractView {
 		aa.addArg("updater", mnem);
 		admin.execute(aa);
 
-		if (aa.hasErrors()) {
-            vc.put("RESULTS", aa.errors());
-        } else { 
-            vc.put("RESULTS", aa.results());
-        }
+//		if (aa.hasErrors()) {
+//            vc.put("RESULTS", aa.errors());
+//        } else {
+//            vc.put("RESULTS", aa.results());
+//        }
 	}
 
 	// ---------------------------------------------------------------
@@ -263,11 +388,11 @@ public class ProjectsView extends AbstractView {
         aa.addArg("project", selProject.getId());
         admin.execute(aa);
 
-        if (aa.hasErrors()) {
-            vc.put("RESULTS", aa.errors());
-        } else { 
-            vc.put("RESULTS", aa.results());
-        }
+//        if (aa.hasErrors()) {
+//            vc.put("RESULTS", aa.errors());
+//        } else {
+//            vc.put("RESULTS", aa.results());
+//        }
 	}
 	
 	// ---------------------------------------------------------------
@@ -319,251 +444,6 @@ public class ProjectsView extends AbstractView {
         Set<StoredProject> projects = ClusterNode.thisNode().getProjects();
         Collection<PluginInfo> metrics = pa.listPlugins();
 
-        // ===================================================================
-        // "Show project info" view
-        // ===================================================================
-        if ((reqValAction.equals(ACT_REQ_SHOW_PROJECT))
-                && (selProject != null)) {
-            // Create the field-set
-            b.append(sp(in++) + "<fieldset>\n");
-            b.append(sp(in) + "<legend>"
-                    + "Project information"
-                    + "</legend>\n");
-            b.append(sp(in++) + "<table class=\"borderless\">\n");
-            // Create the input fields
-            b.append(normalInfoRow(
-                    "Project name", selProject.getName(), in));
-            b.append(normalInfoRow(
-                    "Homepage", selProject.getWebsiteUrl(), in));
-            b.append(normalInfoRow(
-                    "Contact e-mail", selProject.getContactUrl(), in));
-            b.append(normalInfoRow(
-                    "Bug database", selProject.getBtsUrl(), in));
-            b.append(normalInfoRow(
-                    "Mailing list", selProject.getMailUrl(), in));
-            b.append(normalInfoRow(
-                    "Source code", selProject.getScmUrl(), in));
-
-            //------------------------------------------------------------
-            // Tool-bar
-            //------------------------------------------------------------
-            b.append(sp(in++) + "<tr>\n");
-            b.append(sp(in++)
-                    + "<td colspan=\"2\" class=\"borderless\">\n");
-            // Back button
-            b.append(sp(in) + "<input type=\"button\""
-                    + " class=\"install\""
-                    + " style=\"width: 100px;\""
-                    + " value=\"" + getLbl("btn_back") + "\""
-                    + " onclick=\"javascript:"
-                    + SUBMIT + "\">\n");
-            b.append(sp(--in) + "</td>\n");
-            b.append(sp(--in) + "</tr>\n");
-            b.append(sp(--in) + "</table>\n");
-            b.append(sp(--in) + "</fieldset>\n");
-        }
-        // ===================================================================
-        // "Add project" editor
-        // ===================================================================
-        else if (reqValAction.equals(ACT_REQ_ADD_PROJECT)) {
-            // Create the field-set
-            b.append(sp(in++) + "<table class=\"borderless\" width='100%'>\n");
-            // Create the input fields
-            b.append(normalInputRow(
-                    "Project name", REQ_PAR_PRJ_NAME, "", in));
-            b.append(normalInputRow(
-                    "Homepage", REQ_PAR_PRJ_WEB, "", in));
-            b.append(normalInputRow(
-                    "Contact e-mail", REQ_PAR_PRJ_CONT, "", in));
-            b.append(normalInputRow(
-                    "Bug database", REQ_PAR_PRJ_BUG, "", in));
-            b.append(normalInputRow(
-                    "Mailing list", REQ_PAR_PRJ_MAIL, "", in));
-            b.append(normalInputRow(
-                    "Source code", REQ_PAR_PRJ_CODE, "", in));
-
-            //------------------------------------------------------------
-            // Tool-bar
-            //------------------------------------------------------------
-            b.append(sp(in++) + "<tr>\n");
-            b.append(sp(in++)
-                    + "<td colspan=\"2\" class=\"borderless\">\n");
-            // Apply button
-            b.append(sp(in) + "<input type=\"button\""
-                    + " class=\"install\""
-                    + " style=\"width: 100px;\""
-                    + " value=\"" + getLbl("project_add") + "\""
-                    + " onclick=\"javascript:"
-                    + "document.getElementById('"
-                    + REQ_PAR_ACTION + "').value='"
-                    + ACT_CON_ADD_PROJECT + "';"
-                    + SUBMIT + "\">\n");
-            // Cancel button
-            b.append(sp(in) + "<input type=\"button\""
-                    + " class=\"install\""
-                    + " style=\"width: 100px;\""
-                    + " value=\"" + getLbl("cancel") + "\""
-                    + " onclick=\"javascript:"
-                    + SUBMIT + "\">\n");
-            b.append(sp(--in) + "</td>\n");
-            b.append(sp(--in) + "</tr>\n");
-            b.append(sp(--in) + "</table>\n");
-        }
-        // ===================================================================
-        // "Delete project" confirmation view
-        // ===================================================================
-        else if ((reqValAction.equals(ACT_REQ_REM_PROJECT))
-                && (selProject != null)) {
-            b.append(sp(in++) + "<fieldset>\n");
-            b.append(sp(in) + "<legend>" + getLbl("l0059")
-                    + ": " + selProject.getName()
-                    + "</legend>\n");
-            b.append(sp(in++) + "<table class=\"borderless\">");
-            // Confirmation message
-            b.append(sp(in++) + "<tr>\n");
-            b.append(sp(in) + "<td class=\"borderless\">"
-                    + "<b>" + getMsg("delete_project") + "</b>"
-                    + "</td>\n");
-
-            b.append(sp(--in) + "</tr>\n");
-            //------------------------------------------------------------
-            // Tool-bar
-            //------------------------------------------------------------
-            b.append(sp(in++) + "<tr>\n");
-            b.append(sp(in++)
-                    + "<td class=\"borderless\">\n");
-            // Confirm button
-            b.append(sp(in) + "<input type=\"button\""
-                    + " class=\"install\""
-                    + " style=\"width: 100px;\""
-                    + " value=\"" + getLbl("l0006") + "\""
-                    + " onclick=\"javascript:"
-                    + "document.getElementById('"
-                    + REQ_PAR_ACTION + "').value='"
-                    + ACT_CON_REM_PROJECT + "';"
-                    + SUBMIT + "\">\n");
-            // Cancel button
-            b.append(sp(in) + "<input type=\"button\""
-                    + " class=\"install\""
-                    + " style=\"width: 100px;\""
-                    + " value=\"" + getLbl("l0004") + "\""
-                    + " onclick=\"javascript:"
-                    + SUBMIT + "\">\n");
-            b.append(sp(--in) + "</td>\n");
-            b.append(sp(--in) + "</tr>\n");
-            b.append(sp(--in) + "</table>");
-            b.append(sp(in) + "</fieldset>\n");
-        }
-        // ===================================================================
-        // Projects list view
-        // ===================================================================
-        else {
-            addHeaderRow(b,in);
-
-            if (projects.isEmpty()) {
-                b.append(sp(in++) + "<tr>\n");
-                b.append(sp(in) + "<td colspan=\"6\" class=\"noattr\">\n"
-                        + getMsg("no_projects")
-                        + "</td>\n");
-                b.append(sp(--in) + "</tr>\n");
-            }
-            else {
-                //------------------------------------------------------------
-                // Create the content rows
-                //------------------------------------------------------------
-                b.append(sp(in++) + "<tbody>\n");
-                for (StoredProject nextPrj : projects) {
-                    boolean selected = false;
-                    if ((selProject != null)
-                            && (selProject.getId() == nextPrj.getId())) {
-                        selected = true;
-                    }
-                    b.append(sp(in++) + "<tr class=\""
-                            + ((selected) ? "selected" : "edit") + "\""
-                            + " onclick=\"javascript:"
-                            + "document.getElementById('"
-                            + REQ_PAR_PROJECT_ID + "').value='"
-                            + ((selected) ? "" : nextPrj.getId())
-                            + "';"
-                            + SUBMIT + "\">\n");
-                    // Project Id
-                    b.append(sp(in) + "<td class=\"trans\">"
-                            + nextPrj.getId()
-                            + "</td>\n");
-                    // Project name
-                    b.append(sp(in) + "<td class=\"trans\">"
-                            + ((selected)
-                                    ? "<input type=\"button\""
-                                        + " class=\"install\""
-                                        + " style=\"width: 100px;\""
-                                        + " value=\""
-                                        + getLbl("btn_info")
-                                        + "\""
-                                        + " onclick=\"javascript:"
-                                        + "document.getElementById('"
-                                        + REQ_PAR_ACTION + "').value='" 
-                                        + ACT_REQ_SHOW_PROJECT + "';"
-                                        + SUBMIT + "\">"
-                                    : "<img src=\"/edit.png\""
-                                        + " alt=\"[Edit]\"/>")
-                            + "&nbsp;"
-                            + nextPrj.getName()
-                            + "</td>\n");
-                    // Last project version
-                    String lastVersion = getLbl("l0051");
-                    ProjectVersion v = ProjectVersion.getLastProjectVersion(nextPrj);
-                    if (v != null) {
-                        lastVersion = String.valueOf(v.getSequence()) + "(" + v.getRevisionId() + ")";
-                    }
-                    b.append(sp(in) + "<td class=\"trans\">"
-                            + lastVersion
-                            + "</td>\n");
-                    // Date of the last known email
-                    MailMessage mm = MailMessage.getLatestMailMessage(nextPrj);
-                    b.append(sp(in) + "<td class=\"trans\">"
-                            + ((mm == null)?getLbl("l0051"):mm.getSendDate())
-                            + "</td>\n");
-                    // ID of the last known bug entry
-                    Bug bug = Bug.getLastUpdate(nextPrj);
-                    b.append(sp(in) + "<td class=\"trans\">"
-                            + ((bug == null)?getLbl("l0051"):bug.getBugID())
-                            + "</td>\n");
-                    // Evaluation state
-                    String evalState = getLbl("project_not_evaluated");
-                    if (nextPrj.isEvaluated()) {
-                    	evalState = getLbl("project_is_evaluated");
-                    }
-                    b.append(sp(in) + "<td class=\"trans\">"
-                            + evalState
-                            + "</td>\n");
-                    
-                    // Cluster node
-                    String nodename = null;
-                    if (null != nextPrj.getClusternode()) {
-                        nodename = nextPrj.getClusternode().getName();
-                    } else {
-                        nodename = "(local)";
-                    }
-                    b.append(sp(in) + "<td class=\"trans\">" + nodename + "</td>\n");
-                    b.append(sp(--in) + "</tr>\n");
-                    if ((selected) && (metrics.isEmpty() == false)) {
-                        showLastAppliedVersion(nextPrj, metrics, b);
-                    }
-                }
-            }
-            //----------------------------------------------------------------
-            // Tool-bar
-            //----------------------------------------------------------------
-            addToolBar(selProject,b,in);
-
-            //----------------------------------------------------------------
-            // Close the table
-            //----------------------------------------------------------------
-            b.append(sp(--in) + "</tbody>\n");
-            b.append(sp(--in) + "</table>\n");
-            b.append(sp(--in) + "</fieldset>\n");
-        }
-
         // ===============================================================
         // INPUT FIELDS
         // ===============================================================
@@ -591,60 +471,6 @@ public class ProjectsView extends AbstractView {
         b.append(sp(in) + "<input type='hidden' id='" + REQ_PAR_SYNC_PLUGIN +
                 "' name='" + REQ_PAR_SYNC_PLUGIN + 
                 "' value=''>\n");
-    }
-    
-    private void addToolBar(StoredProject selProject,
-            StringBuilder b,
-            long in) {
-        b.append(sp(in++) + "<tr class=\"subhead\">\n");
-        b.append(sp(in++) + "<td>View</td><td colspan=\"6\">\n");
-        // Refresh button
-        b.append(sp(in) + "<input type=\"button\"" + " class=\"install\"" + " style=\"width: 100px;\"" + " value=\"" + getLbl("l0008") + "\"" + " onclick=\"javascript:" + "window.location='/projects" + ((selProject != null)
-                ? "?" + REQ_PAR_PROJECT_ID + "=" + selProject.getId()
-                : "") + "';\"" + ">");
-        b.append("</td></tr><tr class=\"subhead\"><td>Manage</td><td colspan='6'>\n");
-        // Add project button
-        b.append(sp(in) + "<input type=\"button\"" + " class=\"install\"" + " style=\"width: 100px;\"" + " value=\"" + getLbl("add_project") + "\"" + " onclick=\"javascript:" + "document.getElementById('" + REQ_PAR_ACTION + "').value='" + ACT_REQ_ADD_PROJECT + "';" + SUBMIT + "\">\n");
-        // Remove project button
-        b.append(sp(in) + "<input type=\"button\"" + " class=\"install\"" + " style=\"width: 100px;\"" + " value=\"" + getLbl("l0059") + "\"" + " onclick=\"javascript:" + "document.getElementById('" + REQ_PAR_ACTION + "').value='" + ACT_REQ_REM_PROJECT + "';" + SUBMIT + "\"" + ((selProject != null) ? "" : " disabled") + ">");
-        b.append("</td></tr><tr class='subhead'><td>Update</td><td colspan='4'>\n");
-        
-        if (selProject != null) {
-            b.append(sp(in) + "<select name=\"" + REQ_PAR_UPD + "\" id=\"" + REQ_PAR_UPD + "\" " + ((selProject != null) ? "" : " disabled=\"disabled\"") + ">\n");
-            b.append(sp(in) + "<optgroup label=\"Import Stage\">");
-            for (Updater u : updater.getUpdaters(selProject, UpdaterStage.IMPORT)) {
-                b.append("<option value=\"").append(u.mnem()).append("\">").append(u.descr()).append("</option>");
-            }
-            b.append(sp(in) + "</optgroup>");
-            b.append(sp(in) + "<optgroup label=\"Parse Stage\">");
-            for (Updater u : updater.getUpdaters(selProject, UpdaterStage.PARSE)) {
-                b.append("<option value=\"").append(u.mnem()).append("\">").append(u.descr()).append("</option>");
-            }
-            b.append(sp(in) + "</optgroup>");
-            b.append(sp(in) + "<optgroup label=\"Inference Stage\">");
-            for (Updater u : updater.getUpdaters(selProject, UpdaterStage.INFERENCE)) {
-                b.append("<option value=\"").append(u.mnem()).append("\">").append(u.descr()).append("</option>");
-            }
-            b.append(sp(in) + "</optgroup>");
-            b.append(sp(in) + "<optgroup label=\"Default Stage\">");
-            for (Updater u : updater.getUpdaters(selProject, UpdaterStage.DEFAULT)) {
-                b.append("<option value=\"").append(u.mnem()).append("\">").append(u.descr()).append("</option>");
-            }
-            b.append(sp(in) + "</optgroup>");
-            b.append(sp(in) + "</select>");
-        }
-
-        // Trigger updater
-        b.append(sp(in) + "<input type=\"button\" class=\"install\" value=\"Run Updater\" onclick=\"javascript:document.getElementById('" + REQ_PAR_ACTION + "').value='" + ACT_CON_UPD + "';" + SUBMIT + "\"" + ((selProject != null)? "" : " disabled") + ">\n");
-        // Trigger all updates
-        b.append(sp(in) + "<input type=\"button\"" + " class=\"install\"" + " value=\"Run All Updaters\" onclick=\"javascript:document.getElementById('" + REQ_PAR_ACTION + "').value='" + ACT_CON_UPD_ALL + "';" + SUBMIT + "\"" + (((selProject != null))
-                ? "" : " disabled") + ">\n");
-        b.append(sp(--in) + "</td>\n");
-        b.append(sp(--in) + "<td colspan=\"2\" align=\"right\">\n");
-     // Trigger updates on host
-        b.append(sp(in) + "<input type=\"button\"" + " class=\"install\" value=\"Update all on "+ clusterNode.getClusterNodeName() +"\"" + " onclick=\"javascript:" + "document.getElementById('" + REQ_PAR_ACTION + "').value='" + ACT_CON_UPD_ALL_NODE + "';" + SUBMIT + "\">\n");
-        b.append(sp(--in) + "</td>\n");
-        b.append(sp(--in) + "</tr>\n");
     }
     
     private static void showLastAppliedVersion(

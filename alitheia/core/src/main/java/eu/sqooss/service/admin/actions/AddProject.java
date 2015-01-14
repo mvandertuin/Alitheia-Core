@@ -217,7 +217,7 @@ public class AddProject extends AdminActionBase {
         
         if (args.get("update") != null)
             AlitheiaCore.getInstance().getUpdater().update(sp);
-        
+
         finished("Project addded succesfully");
     }
     

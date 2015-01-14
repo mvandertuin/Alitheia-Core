@@ -1,1 +1,52 @@
-YOLO
+
+<fieldset>
+    <legend>Errors</legend>
+    $errors
+</fieldset>
+
+<table>
+    <thead>
+    <tr class="head">
+        <td class='head' style='width: 10%;'>$projects.getLbl("l0066")</td>
+        <td class='head' style='width: 35%;'>$projects.getLbl("l0067")</td>
+        <td class='head' style='width: 15%;'>$projects.getLbl("l0068")</td>
+        <td class='head' style='width: 15%;'>$projects.getLbl("l0069")</td>
+        <td class='head' style='width: 15%;'>$projects.getLbl("l0070")</td>
+        <td class='head' style='width: 10%;'>$projects.getLbl("l0071")</td>
+        <td class='head' style='width: 10%;'>$projects.getLbl("l0073")</td>
+    </tr>
+    </thead>
+
+    #if($projectModels.size()<1)
+    <tr><td colspan="6" class="noattr">$projects.getMsg("no_projects")</td></tr>
+    #else
+        #foreach($project in $projectModels)
+        #if($project.Selected)
+        <tr class="selected">
+        #else
+        <tr class="edit">
+        #end
+            <td class="trans">${project.Id}</td>
+            <td class="trans">
+                #if(!$project.Selected)
+                <form method="get" action="/projects">
+                <button type="submit" name="projectId" class="install" style="width:100px" value="$project.Id">$tr.label("btn_info")</button>
+                </form>
+                #end
+                ${project.Name}
+            </td>
+            <td class="trans">${project.LastVersion}</td>
+            <td class="trans">${project.LastMail}</td>
+            <td class="trans">${project.LastBug}</td>
+            <td class="trans">${project.EvalState}</td>
+            <td class="trans">${project.NodeName}</td>
+        </tr>
+        #end
+    #end
+
+    #parse("projects/toolbar.html")
+</table>
+
+<!--<input type='hidden' id='$reqParAction' name='$reqParAction' value=''>-->
+<!--<input type='hidden' id='$reqParProjectId' name='$reqParProjectId' value='$selectedProject.getId()'>-->
+<!--<input type='hidden' id='$reqParSyncPlugin' name='$reqParSyncPlugin' value=''>-->

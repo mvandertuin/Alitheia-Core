@@ -67,15 +67,15 @@ interface AdminServletFactory {
 }
 
 interface WebAdminRendererFactory {
-	WebAdminRenderer create(BundleContext bc, VelocityContext vc);
+	WebAdminRenderer create(BundleContext bc);
 }
 
 interface PluginsViewFactory {
-	PluginsView create(BundleContext bc, VelocityContext vc);
+	PluginsView create(BundleContext bc);
 }
 
 interface ProjectsViewFactory {
-	ProjectsView create(BundleContext bc, VelocityContext vc);
+	ProjectsView create(BundleContext bc);
 }
 
 interface ProjectDeleteJobFactory {

@@ -1,0 +1,58 @@
+<tr class="subhead"><td>View</td><td colspan="6">
+    <!-- Refresh button -->
+    <form method="get" action="/projects">
+        #if($selectedProject)
+        <input type="hidden" name="projectId" value="$selectedProject.Id">
+        #end
+        <input type="button" class="install" style="width: 100px" value='$tr.label("l0008")'>
+    </form>
+</td></tr>
+
+<tr class="subhead"><td>Manage</td><td colspan='6'>
+    <!-- Add button -->
+    <form method="get" action="/projects_add" style="display: inline">
+        <input type="submit" class="install" style="width: 100px" value='$tr.label("add_project")'>
+    </form>
+    #if($selectedProject)
+    <!-- Remove button -->
+    <form method="get" action="/projects_delete" style="display: inline">
+        <button type="submit" class="install" style="width: 100px" name="projectId" value="$selectedProject.Id">$tr.label("l0059")</button>
+    </form>
+    #end
+</td></tr>
+
+#if($selectedProject)
+<tr class='subhead'><td>Update</td><td colspan='6'>
+        <!-- Updater scope -->
+<form method="post" action="/projects_update">
+        <select name="updater">
+            <optgroup label="Import Stage">
+                #foreach($updater in $updatersImport)
+                <option value="$updater.mnem()">$updater.descr()</option>
+                #end
+            </optgroup>
+            <optgroup label="Parse Stage">
+                #foreach($updater in $updatersParse)
+                <option value="$updater.mnem()">$updater.descr()</option>
+                #end
+            </optgroup>
+            <optgroup label="Inference Stage">
+                #foreach($updater in $updatersInference)
+                <option value="$updater.mnem()">$updater.descr()</option>
+                #end
+            </optgroup>
+            <optgroup label="Default Stage">
+                #foreach($updater in $updatersDefault)
+                <option value="$updater.mnem()">$updater.descr()</option>
+                #end
+            </optgroup>
+        </select>
+<div style="float:right">
+        <!-- Updater trigger -->
+        <button type="submit" class="install" name="scope" value="single">Run Updater</button>
+        <button type="submit" class="install" name="scope" value="all">Run All Updaters</button>
+        <button type="submit" class="install" name="scope" value="host">Run all on $hostname</button>
+</div>
+</form>
+</td></tr>
+#end

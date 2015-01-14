@@ -1,0 +1,19 @@
+<fieldset>
+    <legend>$tr.label("l0059"): $selectedProject.Name</legend>
+    <table class="borderless">
+        <tr><td class="borderless">
+            <b>$tr.message("delete_project")</b>
+        </td>
+        <td class="borderless">
+            <!-- Confirm -->
+            <form action="/projects_delete" method="post">
+                <button type="submit" name="projectId" value="$selectedProject.Id">$tr.label("l0006")</button>
+            </form>
+            <!-- Cancel -->
+            <form action="/projects" method="get">
+                <button type="submit" name="projectId" value="$selectedProject.Id">$tr.label("l0004")</button>
+            </form>
+        </td>
+        </tr>
+    </table>
+</fieldset>

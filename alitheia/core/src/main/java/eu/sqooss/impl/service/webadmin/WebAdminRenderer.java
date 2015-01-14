@@ -68,9 +68,9 @@ public class WebAdminRenderer  extends AbstractView {
     private LogManager logManager;
 
     @Inject
-    public WebAdminRenderer(@Assisted BundleContext bundlecontext, @Assisted VelocityContext vc,
-            Scheduler sched, LogManager logManager) {
-        super(bundlecontext, vc);
+    public WebAdminRenderer(@Assisted BundleContext bundlecontext,
+                            Scheduler sched, LogManager logManager) {
+        super(bundlecontext);
         this.sched = sched;
         this.logManager = logManager;
     }

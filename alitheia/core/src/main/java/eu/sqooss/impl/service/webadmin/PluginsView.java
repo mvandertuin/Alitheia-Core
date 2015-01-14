@@ -64,9 +64,9 @@ public class PluginsView extends AbstractView {
     private PluginAdmin pa;
 
     @Inject
-    public PluginsView(@Assisted BundleContext bundlecontext, @Assisted VelocityContext vc, 
-            DBService db, MetricActivator ma, PluginAdmin pa) {
-        super(bundlecontext, vc);
+    public PluginsView(@Assisted BundleContext bundlecontext,
+                       DBService db, MetricActivator ma, PluginAdmin pa) {
+        super(bundlecontext);
         this.db = db;
         this.ma = ma;
         this.pa = pa;
