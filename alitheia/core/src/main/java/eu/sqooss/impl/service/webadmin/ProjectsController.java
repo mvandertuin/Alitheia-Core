@@ -116,7 +116,7 @@ public class ProjectsController extends Controller {
         // Get this clusters projects
         Set<StoredProject> projects = ClusterNode.thisNode().getProjects();
         // Get the metrics
-        Collection<PluginInfo> metrics = pa.listPlugins();
+        vc.put("projectMetrics", pa.listPlugins());
 
         // Prepare list of projects
         List<ProjectViewModel> projs = new ArrayList<>();
@@ -146,8 +146,7 @@ public class ProjectsController extends Controller {
                     mm == null ? error : mm.getSendDate() + "",
                     bug == null ? error : bug.getBugID(),
                     nextPrj.isEvaluated() ? getLbl("project_is_evaluated") : getLbl("project_not_evaluated"),
-                    nextPrj.getClusternode() != null ? nextPrj.getClusternode().getName() : "(local)",
-                    metrics
+                    nextPrj.getClusternode() != null ? nextPrj.getClusternode().getName() : "(local)"
             ));
         }
 
@@ -321,13 +320,14 @@ public class ProjectsController extends Controller {
                 AlitheiaPlugin pObj = pa.getPlugin(pInfo);
                 if (pObj != null) {
                     ma.syncMetric(pObj, selProject);
+                    if(sobjLogger!=null)
                     sobjLogger.debug("Synchronise plugin (" + pObj.getName() + ") on project (" + selProject.getName() + ").");
                     done = true;
                 }
             }
         }
 
-        if (done) {
+        if (!done) {
             error(vc, "Could not synchronise plugin");
         } else {
             result(vc, "Synchronised plugin");

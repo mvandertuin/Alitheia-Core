@@ -41,14 +41,17 @@
             <td class="trans">${project.EvalState}</td>
             <td class="trans">${project.NodeName}</td>
         </tr>
-            #foreach($metric in $metrics)
+            #if($project.Selected)
+            #foreach($metric in $projectMetrics)
                 #if($metric.Installed)
                     <tr><td colspan="7" class="noattr">
                         <form method="post" action="/projects_sync">
-                            <button type="submit" class="install" name="plugin" value="$m.Hashcode">Synchronise</button> $m.PluginName
+                            <input type="hidden" name="projectId" value="$project.Id" />
+                            <button type="submit" class="install" name="plugin" value="$metric.Hashcode">Synchronise</button> $metric.PluginName
                         </form>
                     </td></tr>
                 #end
+            #end
             #end
         #end
     #end
