@@ -29,7 +29,13 @@
                 #end
                 ${project.Name}
             </td>
-            <td class="trans">${project.LastVersion}</td>
+            <td class="trans">
+                #if($project.LastVersion)
+                    $project.LastVersion (<a title="${project.LastCommit}">$project.LastCommit.substring(0,8)</a>)
+                #else
+                    $tr.label("l0051")
+                #end
+            </td>
             <td class="trans">${project.LastMail}</td>
             <td class="trans">${project.LastBug}</td>
             <td class="trans">${project.EvalState}</td>
