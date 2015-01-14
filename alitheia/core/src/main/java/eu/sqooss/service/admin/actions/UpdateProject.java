@@ -110,7 +110,7 @@ public class UpdateProject extends AdminActionBase {
         }
 
         if (scheduled)
-            finished("Project addded succesfully");
+            finished("Project updated successfully");
         else
             error("updater.failed", "Could not schedule update jobs, check the " +
             		"updater log for details");
