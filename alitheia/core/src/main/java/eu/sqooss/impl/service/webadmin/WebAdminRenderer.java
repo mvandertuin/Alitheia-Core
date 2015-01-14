@@ -39,7 +39,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 
 import com.google.inject.assistedinject.Assisted;
@@ -56,7 +55,7 @@ import eu.sqooss.service.util.StringUtils;
  * @author, Paul J. Adams <paul.adams@siriusit.co.uk>
  * @author, Boryan Yotov <b.yotov@prosyst.com>
  */
-public class WebAdminRenderer  extends AbstractView {
+public class WebAdminRenderer  extends Controller {
     /**
      * Represents the system time at which the WebAdminRender (and
      * thus the system) was started. This is required for the system

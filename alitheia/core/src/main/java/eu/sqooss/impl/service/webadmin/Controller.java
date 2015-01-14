@@ -43,7 +43,7 @@ import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-public abstract class AbstractView {
+public abstract class Controller {
     // Core components
     protected static ServiceReference srefCore = null;
 
@@ -73,7 +73,7 @@ public abstract class AbstractView {
      * 
      * @param bundlecontext the parent bundle's context
      */
-    public AbstractView(BundleContext bundlecontext) {
+    public Controller(BundleContext bundlecontext) {
         // Keep the Velocity context instance
         this.bc = bundlecontext;
     }

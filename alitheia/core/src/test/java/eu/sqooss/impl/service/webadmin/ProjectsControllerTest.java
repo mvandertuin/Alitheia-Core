@@ -30,12 +30,13 @@ import static org.mockito.Mockito.*;
  * A test verifying that the HTML output is unchanged before and after the refactor.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ProjectsViewTest extends HTMLTest {
+public class ProjectsControllerTest extends HTMLTest {
     static long failid;
     static long successid;
 
     @InjectMocks AlitheiaCore core;
-    @InjectMocks ProjectsView projectsView;
+    @InjectMocks
+    ProjectsController projectsController;
 
     // Init mock instances here, otherwise null in inserted into the ProjectsView and AlitheiaCore
     @Mock DBService dbService;
@@ -55,7 +56,7 @@ public class ProjectsViewTest extends HTMLTest {
     public void setup(){
         vc = new VelocityContext();
         vc.put("tr",new TranslationProxy());
-        vc.put("projects", projectsView);
+        vc.put("projects", projectsController);
 
         request = new MockHttpServletRequest();
         request.setMethod("GET");
@@ -77,22 +78,22 @@ public class ProjectsViewTest extends HTMLTest {
 
     @Test
     public void testIndex() {
-        projectsView.list(request, vc);
+        projectsController.list(request, vc);
         String result = render(null, request, vc);
         assertWhiteSpaceEqual(index, result);
     }
 
     @Test
     public void testCreateFrom_AddProject() {
-        projectsView.add(request, vc);
+        projectsController.add(request, vc);
         String result = render(null, request, vc);
         assertWhiteSpaceEqual(addProject, result);
     }
 
     @Test
     public void testRemove(){
-        request.setParameter(ProjectsView.REQ_PAR_PROJECT_ID, "1");
-        projectsView.deleteConfirm(request, vc);
+        request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
+        projectsController.deleteConfirm(request, vc);
         String result = render(null, request, vc);
         assertWhiteSpaceEqual(removeProject, result);
     }
@@ -101,7 +102,7 @@ public class ProjectsViewTest extends HTMLTest {
     public void testUpdate(){
         request.setParameter("updater", "mnem");
         request.setParameter("scope", "single");
-        request.setParameter(ProjectsView.REQ_PAR_PROJECT_ID, "1");
+        request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
 //        request.setParameter(ProjectsView.REQ_PAR_ACTION, ProjectsView.ACT_CON_UPD);
 
         Updater updater = mock(Updater.class);
@@ -109,7 +110,7 @@ public class ProjectsViewTest extends HTMLTest {
         when(updater.mnem()).thenReturn("updater-mnem");
         when(updater.descr()).thenReturn("updater-descr");
 
-        projectsView.update(request, vc);
+        projectsController.update(request, vc);
         String result = render(null, request, vc);
         assertWhiteSpaceEqual(updateProject, result);
     }
@@ -144,14 +145,14 @@ public class ProjectsViewTest extends HTMLTest {
 
         testShowLastAppliedVersion();
 
-        projectsView.list(request, vc);
+        projectsController.list(request, vc);
         String result = render(null, request, vc);
         assertWhiteSpaceEqual(projectList, result);
     }
 
     @Test
     public void testShowProject(){
-        request.setParameter(ProjectsView.REQ_PAR_PROJECT_ID, "1");
+        request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
 
         when(proj.getName()).thenReturn("ProjName");
         when(proj.getWebsiteUrl()).thenReturn("ProjWebsite");
@@ -160,21 +161,21 @@ public class ProjectsViewTest extends HTMLTest {
         when(proj.getMailUrl()).thenReturn("ProjMailUrl");
         when(proj.getScmUrl()).thenReturn("ProjSCMUrl");
 
-        projectsView.list(request, vc);
+        projectsController.list(request, vc);
         String result = render(null, request, vc);
         assertWhiteSpaceEqual(showProject, result);
     }
 
     @Test
     public void testAddProjectForm(){
-        projectsView.add(request, vc);
+        projectsController.add(request, vc);
         String result = render(null, request, vc);
         assertWhiteSpaceEqual(addProjectForm, result);
     }
 
     @Test
     public void testRemoveConfirmation(){
-        request.setParameter(ProjectsView.REQ_PAR_PROJECT_ID, "1");
+        request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
 
         when(proj.getName()).thenReturn("ProjName");
         when(proj.getWebsiteUrl()).thenReturn("ProjWebsite");
@@ -183,13 +184,13 @@ public class ProjectsViewTest extends HTMLTest {
         when(proj.getMailUrl()).thenReturn("ProjMailUrl");
         when(proj.getScmUrl()).thenReturn("ProjSCMUrl");
 
-        projectsView.deleteConfirm(request, vc);
+        projectsController.deleteConfirm(request, vc);
         String result = render(null, request, vc);
         assertWhiteSpaceEqual(removeProjectConfirmation, result);
     }
 
     public void testShowLastAppliedVersion(){
-        request.setParameter(ProjectsView.REQ_PAR_PROJECT_ID, "1");
+        request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
 
         PluginInfo plugin = mock(PluginInfo.class);
         plugin.installed = true;

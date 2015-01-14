@@ -57,24 +57,12 @@ import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.scheduler.SchedulerException;
 import eu.sqooss.service.updater.UpdaterService;
 import eu.sqooss.service.updater.UpdaterService.UpdaterStage;
-import sun.security.krb5.Config;
 
-public class ProjectsView extends AbstractView {
+public class ProjectsController extends Controller {
     // Script for submitting this page
     static String SUBMIT = "document.projects.submit();";
 
-    // Action parameter's values
-    static String ACT_REQ_ADD_PROJECT   = "reqAddProject";
-    static String ACT_CON_ADD_PROJECT   = "conAddProject";
-    static String ACT_REQ_REM_PROJECT   = "reqRemProject";
-    static String ACT_CON_REM_PROJECT   = "conRemProject";
-    static String ACT_REQ_SHOW_PROJECT  = "conShowProject";
-    static String ACT_CON_UPD_ALL       = "conUpdateAll";
-    static String ACT_CON_UPD           = "conUpdate";
-    static String ACT_CON_UPD_ALL_NODE  = "conUpdateAllOnNode";
-
     // Servlet parameters
-    static String REQ_PAR_ACTION        = "reqAction";
     static String REQ_PAR_PROJECT_ID    = "projectId";
     static String REQ_PAR_PRJ_NAME      = "projectName";
     static String REQ_PAR_PRJ_WEB       = "projectHomepage";
@@ -82,10 +70,7 @@ public class ProjectsView extends AbstractView {
     static String REQ_PAR_PRJ_BUG       = "projectBL";
     static String REQ_PAR_PRJ_MAIL      = "projectML";
     static String REQ_PAR_PRJ_CODE      = "projectSCM";
-    static String REQ_PAR_SYNC_PLUGIN   = "reqParSyncPlugin";
-    static String REQ_PAR_UPD           = "reqUpd";
-    
-    private DBService db;
+
     private Scheduler sched;
     private MetricActivator ma;
     private PluginAdmin pa;
@@ -101,12 +86,11 @@ public class ProjectsView extends AbstractView {
      * @param bundlecontext the <code>BundleContext</code> object
      */
     @Inject
-    public ProjectsView(@Assisted BundleContext bundlecontext,
-                        DBService db, Scheduler sched, MetricActivator ma, PluginAdmin pa,
-                        UpdaterService updater, ClusterNodeService clusterNode, AdminService admin,
-                        ProjectDeleteJobFactory projDelJobFactory) {
+    public ProjectsController(@Assisted BundleContext bundlecontext,
+                              Scheduler sched, MetricActivator ma, PluginAdmin pa,
+                              UpdaterService updater, ClusterNodeService clusterNode, AdminService admin,
+                              ProjectDeleteJobFactory projDelJobFactory) {
         super(bundlecontext);
-        this.db = db;
         this.sched = sched;
         this.ma = ma;
         this.pa = pa;
@@ -414,4 +398,3 @@ public class ProjectsView extends AbstractView {
 }
 
 // vi: ai nosi sw=4 ts=4 expandtab
-

@@ -13,16 +13,16 @@ public class TranslationProxy {
 
     /** Translate a label */
     public String label(String s) {
-        return AbstractView.getLbl(s);
+        return Controller.getLbl(s);
     }
 
     /** Translate a (multi-line, html formatted) message */
     public String message(String s) {
-        return AbstractView.getMsg(s);
+        return Controller.getMsg(s);
     }
 
     /** Translate an error message */
     public String error(String s) {
-        return AbstractView.getErr(s);
+        return Controller.getErr(s);
     }
 }

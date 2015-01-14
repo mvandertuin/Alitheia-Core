@@ -57,7 +57,7 @@ import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.pa.PluginInfo.ConfigurationType;
 import eu.sqooss.service.util.StringUtils;
 
-public class PluginsView extends AbstractView {
+public class PluginsView extends Controller {
 
     private DBService db;
     private MetricActivator ma;
