@@ -26,6 +26,32 @@
                       <td class="trans">$metrics.getPluginClass($i)</td>
                       <td class="trans">$i.getPluginVersion()</td>
                 </tr>
+                #if($reqValShowProp)
+                	#if($metrics.getPluginConfigurations(i) && !$metrics.getPluginConfigurations(i).isEmpty())
+                		#foreach($p in $metrics.getPluginConfigurations(i))
+                			<tr>
+                				<td></td>
+                				<td colspan="3" class="attr">
+                					<b>Property:</b>$p.getName()
+                					<b>Type:</b>$p.getType()                					
+                					<b>Value:</b>$p.getValue()
+                				</td>
+                			</tr>
+                		#end
+                	#end
+                #end
+                #if($reqValShowActv)
+                	#if($metrics.getPluginActivators(i))
+                		#foreach($a in $metrics.getPluginActivators(i))
+                			<tr>
+                				<td></td>
+                				<td colspan="3" class="attr">
+                					<b>Activator:</b>$a.getName()
+                				</td>
+                			</tr>
+                		#end
+                	#end           
+        		#end
         	#end
         #end
         #foreach($i in $pluginList)
@@ -33,9 +59,35 @@
         		<tr class="edit" onclick="javascript:document.getElementById('${reqParHashcode}').value='${i.getHashcode()}';document.metrics.submit();">
                       <td class="trans"><img src="/edit.png" alt="[Edit]">&nbsp;Registered</td>
                       <td class="trans">$i.getPluginName()</td>
-                      <td class="trans">$pluginsView.getPluginClass($i)</td>
+                      <td class="trans">$metrics.getPluginClass($i)</td>
                       <td class="trans">$i.getPluginVersion()</td>
                 </tr>
+                #if($reqValShowProp)
+                	#if($metrics.getPluginConfigurations(i) && !$metrics.getPluginConfigurations(i).isEmpty())
+                		#foreach($p in $metrics.getPluginConfigurations(i))
+                			<tr>
+                				<td></td>
+                				<td colspan="3" class="attr">
+                					<b>Property:</b>$p.getName()
+                					<b>Type:</b>$p.getType()                					
+                					<b>Value:</b>$p.getValue()
+                				</td>
+                			</tr>
+                		#end
+                	#end
+                #end
+                #if($reqValShowActv)
+                	#if($metrics.getPluginActivators(i))
+                		#foreach($a in $metrics.getPluginActivators(i))
+                			<tr>
+                				<td></td>
+                				<td colspan="3" class="attr">
+                					<b>Activator:</b>$a.getName()
+                				</td>
+                			</tr>
+                		#end
+                	#end           
+        		#end
         	#end
         #end
         </tbody>
@@ -53,7 +105,7 @@
             	onclick="javascript:document.getElementById('$reqParShowActv').value = this.checked;document.getElementById('$reqParHashcode').value='';document.metrics.submit();">Display activators
          </span>
          </fieldset>
-         
+	#end         
          <input type="hidden" id="$reqParAction" name="$reqParAction" value="">
          <input type="hidden" id="$reqParHashcode" name="$reqParHashcode" value="$!reqValHashcode">
          <input type="hidden" id="$reqParPropName" name="reqParPropName" value="$!reqValPropName">
@@ -63,5 +115,4 @@
          <input type="hidden" id="$reqParShowProp" name="$reqParShowProp" value="$reqValShowProp">
          <input type="hidden" id="$reqParShowActv" name="$reqParShowActv" value="$reqValShowActv">
          
-	#end
 </form>

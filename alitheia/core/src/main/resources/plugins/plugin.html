@@ -43,7 +43,6 @@
 			</tr>
 		</tbody>
 		</table>			
-</fieldset>
 #if($plugin.getInstalled())
  <fieldset>
  	<legend>Supported metrics</legend>
@@ -59,7 +58,7 @@
      <tbody>	
      	#if($!metrics || $metrics.isEmpty())
      	<tr>
-     		<td colspan="4" class="noattr">This plug-in does not support metrics."</td>
+     		<td colspan="4" class="noattr">This plug-in does not support metrics.</td>
      	</tr>
      	#else
      		#foreach($metric in $metrics)
@@ -74,7 +73,7 @@
      </table>
     </fieldset>
     <fieldset>
-    	<legend>"Configuration properties"</legend>
+    	<legend>Configuration properties</legend>
     	<table>
     		<thead>
         		<tr class="head">
@@ -86,17 +85,40 @@
      		<tbody>
     	#if($!pluginConfigs || $pluginConfigs.isEmpty())
      	<tr>
-     		<td colspan="3" class="noattr">This plug-in has no configuration properties."</td>
+     		<td colspan="3" class="noattr">This plug-in has no configuration properties.</td>
      	</tr>
      	#else
      		#foreach($config in $pluginConfigs)
-     			<tr class="edit" onclick="javascript:document.getElementById('${reqParAction}')>
-     				<td>$.getId()</td>
-     				<td>$metric.getMnemonic()</td>
-     				<td>$metric.getMetricType().getType()</td>
-     				<td>$metric.getDescription()</td>
+     			<tr class="edit" onclick="javascript:
+     			document.getElementById('${reqParAction}').value='${actValReqUpdProp}';
+     			document.getElementById('${reqParPropName}').value='${config.getName()}';
+     			document.getElementById('${reqParPropType}').value='${config.getType()}';
+     			document.getElementById('${reqParPropDescr}').value='${config.getMsg()}';
+     			document.getElementById('${reqParPropValue}').value='${config.getValue()}';
+     			document.metrics.submit();
+     			">
+     			#if($!config.getMsg())
+     				<td class="trans" title="No description available">
+     					<img src="edit.png" alt="[Edit]"/> $config.getName()
+     				</td>
+     			#else
+     				<td class="trans" title="${config.getMsg()}">
+     					<img src="edit.png" alt="[Edit]"/> $config.getName()
+     				</td>
+     			#end
+     				<td class="trans">$config.getType()</td>
+     				<td class="trans">$config.getValue()</td>
+     			</tr>
      		#end
      	#end
+     	<tr>
+     		<td colspan="3">
+     			<input type="button" class="install" style="width:100px;" value="Add property"
+     			onclick="javascript:document.getElementById('$reqParAction').value='$actValReqAddProp';document.metrics.submit();">		
+     		</td>
+     	</tr>
+     </tbody>	
      </table>
      </fieldset>			
 #end
+</fieldset>
