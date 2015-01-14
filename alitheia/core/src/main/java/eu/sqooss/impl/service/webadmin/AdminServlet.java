@@ -101,7 +101,7 @@ public class AdminServlet extends HttpServlet {
             Scheduler scheduler,
             WebAdminRendererFactory webAdminRendererFactory,
             PluginsViewFactory pluginsViewFactory,
-            ProjectsViewFactory projectsViewFactory) {
+            ProjectsControllerFactory projectsControllerFactory) {
         this.bc = bc;
         this.logger = logger;
         this.ve = ve;
@@ -137,7 +137,7 @@ public class AdminServlet extends HttpServlet {
         controllerList = new ArrayList<>();
         adminView = webAdminRendererFactory.create(bc);
         pluginsView = pluginsViewFactory.create(bc);
-        projectsController = projectsViewFactory.create(bc);
+        projectsController = projectsControllerFactory.create(bc);
         controllerList.add(adminView);
         controllerList.add(projectsController);
         controllerList.add(pluginsView);

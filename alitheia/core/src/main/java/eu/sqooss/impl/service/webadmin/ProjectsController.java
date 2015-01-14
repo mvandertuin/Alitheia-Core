@@ -279,7 +279,7 @@ public class ProjectsController extends Controller {
         String scope = req.getParameter("scope");
         StoredProject selProject = selectedProject(req);
 
-        Set<StoredProject> projectList;
+        Set<StoredProject> projectList = null;
         if("host".equals(scope)){
             // For all projects on this host
             projectList = ClusterNode.thisNode().getProjects();
@@ -288,9 +288,9 @@ public class ProjectsController extends Controller {
             projectList = Collections.singleton(selProject);
         } else {
             error(vc, "First select a project before selecting an updater.");
-            return;
         }
 
+        if(projectList != null)
         for (StoredProject project : projectList) {
             AdminAction aa = admin.create(UpdateProject.MNEMONIC);
             aa.addArg("project", project.getId());
@@ -307,7 +307,7 @@ public class ProjectsController extends Controller {
         general(req, vc, selProject);
     }
 
-    @Action(uri = "projects_sync", template = TEMPLATE, method = Action.POST)
+    @Action(uri = "/projects_sync", template = TEMPLATE, method = Action.POST)
     public void sync(HttpServletRequest req, VelocityContext vc){
         vc.put(SUBTEMPLATE, "projects/list.html");
         StoredProject selProject = selectedProject(req);
