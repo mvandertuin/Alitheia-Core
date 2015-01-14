@@ -1,0 +1,15 @@
+#parse(macros.html)
+<form id="projects" name="projects" method="post" action="/projects">
+
+    <fieldset>
+        <legend>Errors</legend>
+        $errors
+    </fieldset>
+
+    #parse($actionTemplate)
+
+    <input type='hidden' id='$reqParAction' name='$reqParAction' value=''>
+    <input type='hidden' id='$reqParProjectId' name='$reqParProjectId' value='$selectedProject.getId()'>
+    <input type='hidden' id='$reqParSyncPlugin' name='$reqParSyncPlugin' value=''>
+
+</form>

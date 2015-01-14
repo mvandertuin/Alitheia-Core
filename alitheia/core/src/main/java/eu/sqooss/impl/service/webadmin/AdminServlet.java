@@ -33,7 +33,6 @@
 
 package eu.sqooss.impl.service.webadmin;
 
-import eu.sqooss.impl.service.webadmin.WebAdminRenderer;
 import eu.sqooss.service.admin.AdminAction;
 import eu.sqooss.service.admin.AdminService;
 import eu.sqooss.service.admin.actions.AddProject;
@@ -46,7 +45,12 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Locale;
 
 import javax.inject.Inject;
@@ -76,7 +80,7 @@ public class AdminServlet extends HttpServlet {
     private Scheduler scheduler;
 
     // Content tables
-    private Hashtable<String, String> dynamicContentMap = null;
+    private List<AbstractView> controllerList = null;
     private Hashtable<String, Pair<String, String>> staticContentMap = null;
 
     // Dynamic substitutions
@@ -132,17 +136,18 @@ public class AdminServlet extends HttpServlet {
         addStaticContent("/rules.png", "image/x-png");
 
         // Create the dynamic content map
-        dynamicContentMap = new Hashtable<String, String>();
-        dynamicContentMap.put("/", "index.html");
-        dynamicContentMap.put("/index", "index.html");
-        dynamicContentMap.put("/projects", "projects.html");
-        dynamicContentMap.put("/projectlist", "projectslist.html");
-        dynamicContentMap.put("/logs", "logs.html");
-        dynamicContentMap.put("/jobs", "jobs.html");
-        dynamicContentMap.put("/alljobs", "alljobs.html");
-        dynamicContentMap.put("/users", "users.html");
-        dynamicContentMap.put("/rules", "rules.html");
-        dynamicContentMap.put("/jobstat", "jobstat.html");
+        controllerList = new ArrayList<>();
+
+//        controllerList.put("/", "index.html");
+//        controllerList.put("/index", "index.html");
+//        controllerList.put("/projects", "projects.html");
+//        controllerList.put("/projectlist", "projectslist.html");
+//        controllerList.put("/logs", "logs.html");
+//        controllerList.put("/jobs", "jobs.html");
+//        controllerList.put("/alljobs", "alljobs.html");
+//        controllerList.put("/users", "users.html");
+//        controllerList.put("/rules", "rules.html");
+//        controllerList.put("/jobstat", "jobstat.html");
 
         // Now the dynamic substitutions and renderer
         adminView = webAdminRendererFactory.create(bc, vc);
@@ -150,6 +155,10 @@ public class AdminServlet extends HttpServlet {
         // Create the various view objects
         pluginsView = pluginsViewFactory.create(bc, vc);
         projectsView = projectsViewFactory.create(bc, vc);
+
+        controllerList.add(adminView);
+        controllerList.add(projectsView);
+        controllerList.add(pluginsView);
     }
 
     /**
@@ -195,15 +204,29 @@ public class AdminServlet extends HttpServlet {
                 //FIXME: How do we do a restart?
                 return;
             }
-            else if ((query != null) && (staticContentMap.containsKey(query))) {
+            else if (staticContentMap.containsKey(query)) {
                 sendResource(response, staticContentMap.get(query));
             }
-            else if ((query != null) && (dynamicContentMap.containsKey(query))) {
-                sendPage(response, request, dynamicContentMap.get(query));
+            else {
+                outer:
+                for(AbstractView view : controllerList){
+                    for(Method m : view.getClass().getMethods()){
+                        Action a = m.getAnnotation(Action.class);
+                        if(a != null && query.equals(a.uri())){
+                            m.invoke(view, request, vc);
+                            sendPage(response, request, a.template());
+                            break outer;
+                        }
+                    }
+                }
             }
         } catch (NullPointerException e) {
             logger.warn("Got a NPE while rendering a page.",e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         } finally {
             if (db.isDBSessionActive()) {
                 db.commitDBSession();
@@ -323,7 +346,7 @@ public class AdminServlet extends HttpServlet {
         vc.put("projects",projectsView);
         vc.put("metrics",pluginsView);
         vc.put("request", request); // The request can be used by the render() methods
-    }  
+    }
     
     /**
      * This is a class whose sole purpose is to provide a useful API from

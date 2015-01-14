@@ -9,11 +9,11 @@
   <name>The SQO-OSS project</name>
 
   <description>Alitheia Core is a platform for conducting software engineering studies. 
-  	It integrates data from various sources such as from SVN, mailing lists and bug databases.
+    It integrates data from various sources such as from SVN, mailing lists and bug databases.
 
-	Being a platform, and not a concrete implementation, means that by writing the appropriate plug-ins, 
-	you can instruct Alitheia Core to produce any measurements you are interested into and maybe 
-	integrate those measurements in high level quality evaluations.</description>
+  Being a platform, and not a concrete implementation, means that by writing the appropriate plug-ins, 
+  you can instruct Alitheia Core to produce any measurements you are interested into and maybe 
+  integrate those measurements in high level quality evaluations.</description>
 
   <url>http://www.sqo-oss.org</url>
 
@@ -38,9 +38,9 @@
       <url>dav:https://maven.sqo-oss.org/</url>
     </repository>
     <snapshotRepository>
-    	<id>ac-snapshot</id>
-    	<name>Alitheia Core snapshot repository</name>
-    	<url>dav:https://maven.sqo-oss.org/snapshot</url>
+      <id>ac-snapshot</id>
+      <name>Alitheia Core snapshot repository</name>
+      <url>dav:https://maven.sqo-oss.org/snapshot</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -209,11 +209,11 @@
 
   <!-- profiles -->
   <profiles>
-  	<profile>
+    <profile>
       <id>skiptests</id>
       <activation>
-      	<activeByDefault>true</activeByDefault>
-      	<property>
+        <activeByDefault>true</activeByDefault>
+        <property>
           <name>tests</name>
           <value>0</value>
         </property>
@@ -234,7 +234,7 @@
     <profile>
       <id>runtests</id>
       <activation>
-      	<property>
+        <property>
           <name>tests</name>
           <value>1</value>
         </property>

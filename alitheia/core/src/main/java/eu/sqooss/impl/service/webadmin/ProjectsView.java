@@ -39,6 +39,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.http.protocol.HTTP;
 import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 
@@ -121,6 +122,14 @@ public class ProjectsView extends AbstractView {
         this.clusterNode = clusterNode;
         this.admin = admin;
         this.projDelJobFactory = projDelJobFactory;
+    }
+
+    @Action(uri = "/projects", template = "projects.html")
+    public void list(HttpServletRequest req, VelocityContext vc){
+        System.out.println("Executing ACTION!! DAMNIT!! DONE!!");
+        vc.put("subtemplate", "projects/list.html");
+
+        
     }
 
     /**
