@@ -42,6 +42,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
 public abstract class Controller {
     // Core components
@@ -506,7 +507,7 @@ public abstract class Controller {
         public InputRow(String title, String name, String value){
             this.title = title;
             this.name = name;
-            this.value = value;
+            this.value = escapeHtml(value);
         }
     }
 

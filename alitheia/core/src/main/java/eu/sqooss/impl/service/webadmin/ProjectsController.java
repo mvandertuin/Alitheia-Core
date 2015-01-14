@@ -198,8 +198,25 @@ public class ProjectsController extends Controller {
     @Action(uri = "/projects_add", template = "projects.html", method = "POST")
     public void addPost(HttpServletRequest req, VelocityContext vc)
     {
-        StringBuilder e = new StringBuilder();
-        StoredProject proj = addProject(vc, req);
+        AdminAction aa = admin.create(AddProject.MNEMONIC);
+        // Properties below correspond to where AddProject will be looking
+        aa.addArg("scm",     req.getParameter(REQ_PAR_PRJ_CODE));
+        aa.addArg("name",    req.getParameter(REQ_PAR_PRJ_NAME));
+        aa.addArg("bts",     req.getParameter(REQ_PAR_PRJ_BUG));
+        aa.addArg("mail",    req.getParameter(REQ_PAR_PRJ_MAIL));
+        aa.addArg("web",     req.getParameter(REQ_PAR_PRJ_WEB));
+        aa.addArg("contact", req.getParameter(REQ_PAR_PRJ_CONT));
+        admin.execute(aa);
+
+        StoredProject proj = null;
+
+        if (aa.hasErrors()) {
+            error(vc, aa.errors());
+            vc.put("form", projectTable(req));
+        } else {
+            result(vc, aa.results());
+            proj = StoredProject.getProjectByName(req.getParameter(REQ_PAR_PRJ_NAME));
+        }
 
         vc.put("subtemplate", proj == null ? "projects/add.html" : "projects/list.html");
 
@@ -238,8 +255,19 @@ public class ProjectsController extends Controller {
         vc.put("subtemplate", "projects/list.html");
 
         StoredProject selProject = selectedProject(req);
-        StringBuilder e = new StringBuilder();
-        selProject = removeProject(vc, selProject, 0);
+        if (selProject != null)
+        {
+            // Deleting large projects in the foreground is very slow
+            ProjectDeleteJob pdj = projDelJobFactory.create(selProject);
+            try {
+                sched.enqueue(pdj);
+            } catch (SchedulerException e1) {
+                error(vc, getErr("e0034"));
+            }
+            selProject = null;
+        } else {
+            error(vc, getErr("e0034"));
+        }
 
         general(req, vc, selProject);
     }
@@ -250,15 +278,29 @@ public class ProjectsController extends Controller {
         String scope = req.getParameter("scope");
         StoredProject selProject = selectedProject(req);
 
-        if(selProject == null || scope == null){
+        Set<StoredProject> projectList;
+        if("host".equals(scope)){
+            // For all projects on this host
+            projectList = ClusterNode.thisNode().getProjects();
+        } else if(selProject != null){
+            // For single project
+            projectList = Collections.singleton(selProject);
+        } else {
             error(vc, "First select a project before selecting an updater.");
             return;
-        } else if(scope.equals("single")){
-            triggerUpdate(vc, selProject, req.getParameter("updater"));
-        } else if(scope.equals("all")) {
-            triggerAllUpdate(vc, selProject);
-        } else if(scope.equals("host")){
-            triggerAllUpdateNode(vc, selProject);
+        }
+
+        for (StoredProject project : projectList) {
+            AdminAction aa = admin.create(UpdateProject.MNEMONIC);
+            aa.addArg("project", project.getId());
+            if("single".equals(scope))
+                aa.addArg("updater", req.getParameter("updater"));
+            admin.execute(aa);
+            if (aa.hasErrors()) {
+                error(vc, aa.errors());
+            } else {
+                result(vc, aa.results());
+            }
         }
 
         general(req, vc, selProject);
@@ -269,130 +311,28 @@ public class ProjectsController extends Controller {
         vc.put("subtemplate", "projects/list.html");
         StoredProject selProject = selectedProject(req);
         String reqValSyncPlugin = req.getParameter("plugin");
-        syncPlugin(vc, selProject, reqValSyncPlugin);
 
-        general(req, vc, selProject);
-    }
-
-    /**
-     * Renders the various project's views.
-     *
-     * @param req the servlet's request object
-     *
-     * @return The HTML presentation of the generated view.
-     */
-    public String render(HttpServletRequest req) {
-        return "";
-    }
-  
-    private StoredProject addProject(VelocityContext vc, HttpServletRequest r) {
-    	AdminAction aa = admin.create(AddProject.MNEMONIC);
-        // Properties below correspond to where AddProject will be looking
-    	aa.addArg("scm",     r.getParameter(REQ_PAR_PRJ_CODE));
-    	aa.addArg("name",    r.getParameter(REQ_PAR_PRJ_NAME));
-    	aa.addArg("bts",     r.getParameter(REQ_PAR_PRJ_BUG));
-    	aa.addArg("mail",    r.getParameter(REQ_PAR_PRJ_MAIL));
-    	aa.addArg("web",     r.getParameter(REQ_PAR_PRJ_WEB));
-        aa.addArg("contact", r.getParameter(REQ_PAR_PRJ_CONT));
-        admin.execute(aa);
-
-    	if (aa.hasErrors()) {
-            error(vc, aa.errors());
-            vc.put("form", projectTable(r));
-            return null;
-    	} else {
-            result(vc, aa.results());
-            return StoredProject.getProjectByName(r.getParameter(REQ_PAR_PRJ_NAME));
-    	}
-    }
-    
-    // ---------------------------------------------------------------
-    // Remove project
-    // ---------------------------------------------------------------
-    private StoredProject removeProject(VelocityContext vc, StoredProject selProject, int indent) {
-    	if (selProject != null) {
-			// Deleting large projects in the foreground is
-			// very slow
-    	    ProjectDeleteJob pdj = projDelJobFactory.create(selProject);
-			try {
-				sched.enqueue(pdj);
-			} catch (SchedulerException e1) {
-                error(vc, getErr("e0034"));
-			}
-			selProject = null;
-        } else {
-            error(vc, getErr("e0034"));
-		}
-    	return selProject;
-    }
-
-	// ---------------------------------------------------------------
-	// Trigger an update
-	// ---------------------------------------------------------------
-	private void triggerUpdate(VelocityContext vc, StoredProject selProject, String mnem) {
-		AdminAction aa = admin.create(UpdateProject.MNEMONIC);
-		aa.addArg("project", selProject.getId());
-		aa.addArg("updater", mnem);
-		admin.execute(aa);
-
-		if (aa.hasErrors()) {
-            error(vc, aa.errors());
-        } else {
-            result(vc, aa.results());
-        }
-	}
-
-	// ---------------------------------------------------------------
-	// Trigger update on all resources for that project
-	// ---------------------------------------------------------------
-	private void triggerAllUpdate(VelocityContext vc, StoredProject selProject) {
-        AdminAction aa = admin.create(UpdateProject.MNEMONIC);
-        aa.addArg("project", selProject.getId());
-        admin.execute(aa);
-
-        if (aa.hasErrors()) {
-            error(vc, aa.errors());
-        } else {
-            result(vc, aa.results());
-        }
-	}
-	
-	// ---------------------------------------------------------------
-	// Trigger update on all resources on all projects of a node
-	// ---------------------------------------------------------------
-    private void triggerAllUpdateNode(VelocityContext vc, StoredProject selProject) {
-		Set<StoredProject> projectList = ClusterNode.thisNode().getProjects();
-		
-		for (StoredProject project : projectList) {
-			triggerAllUpdate(vc, project);
-		}
-	}
-	
-	// ---------------------------------------------------------------
-	// Trigger synchronize on the selected plug-in for that project
-	// ---------------------------------------------------------------
-    private void syncPlugin(VelocityContext vc, StoredProject selProject, String reqValSyncPlugin) {
+        /* Try to sync */
         boolean done = false;
-
-		if ((reqValSyncPlugin != null) && (selProject != null)) {
-			PluginInfo pInfo = pa.getPluginInfo(reqValSyncPlugin);
-			if (pInfo != null) {
-				AlitheiaPlugin pObj = pa.getPlugin(pInfo);
-				if (pObj != null) {
-					ma.syncMetric(pObj, selProject);
-					sobjLogger.debug("Synchronise plugin (" + pObj.getName()
-							+ ") on project (" + selProject.getName() + ").");
-
+        if (reqValSyncPlugin != null && selProject != null) {
+            PluginInfo pInfo = pa.getPluginInfo(reqValSyncPlugin);
+            if (pInfo != null) {
+                AlitheiaPlugin pObj = pa.getPlugin(pInfo);
+                if (pObj != null) {
+                    ma.syncMetric(pObj, selProject);
+                    sobjLogger.debug("Synchronise plugin (" + pObj.getName() + ") on project (" + selProject.getName() + ").");
                     done = true;
-				}
-			}
-		}
+                }
+            }
+        }
 
         if (done) {
             error(vc, "Could not synchronise plugin");
         } else {
             result(vc, "Synchronised plugin");
         }
+
+        general(req, vc, selProject);
     }
 
 }
