@@ -45,13 +45,9 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
@@ -207,31 +203,44 @@ public class AdminServlet extends HttpServlet {
             else if (staticContentMap.containsKey(query)) {
                 sendResource(response, staticContentMap.get(query));
             }
-            else {
-                outer:
-                for(AbstractView view : controllerList){
-                    for(Method m : view.getClass().getMethods()){
-                        Action a = m.getAnnotation(Action.class);
-                        if(a != null && query.equals(a.uri())){
-                            m.invoke(view, request, vc);
-                            sendPage(response, request, a.template());
-                            break outer;
-                        }
-                    }
-                }
+            else if(!handleWithController(request, response)) {
+                logger.warn("Request ("+ request.getMethod() + " " + request.getPathInfo() + ") was unhandled.");
             }
         } catch (NullPointerException e) {
             logger.warn("Got a NPE while rendering a page.",e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();
         } finally {
             if (db.isDBSessionActive()) {
                 db.commitDBSession();
             }
         }
+    }
+
+    /**
+     * A very basic Web MVC framework's routing
+     * @param req
+     * @param resp
+     * @return A controller handles this request or not
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     * @throws ServletException
+     * @throws IOException
+     */
+    protected boolean handleWithController(HttpServletRequest req, HttpServletResponse resp) throws InvocationTargetException, IllegalAccessException, ServletException, IOException {
+        String query = req.getPathInfo();
+        for(AbstractView view : controllerList){
+            for(Method m : view.getClass().getMethods()){
+                Action a = m.getAnnotation(Action.class);
+                if(a != null && query.equals(a.uri()) && a.method().equals(req.getMethod())){
+                    m.invoke(view, req, vc);
+                    sendPage(resp, req, a.template());
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     protected void doPost(HttpServletRequest request,
@@ -245,6 +254,9 @@ public class AdminServlet extends HttpServlet {
             String query = request.getPathInfo();
             logger.debug("POST:" + query);
 
+            if(handleWithController(request, response)){
+                // already handled
+            } else
             if (query.startsWith("/addproject")) {
                 //addProject(request);
                 sendPage(response, request, "/results.html");
@@ -263,6 +275,8 @@ public class AdminServlet extends HttpServlet {
         } catch (NullPointerException e) {
             logger.warn("Got a NPE while handling POST data.");
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
         } finally {
             if (db.isDBSessionActive()) {
                 db.commitDBSession();
