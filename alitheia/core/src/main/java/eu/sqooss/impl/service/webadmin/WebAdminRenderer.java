@@ -33,20 +33,17 @@
 
 package eu.sqooss.impl.service.webadmin;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-
-import javax.inject.Inject;
-
-import org.osgi.framework.BundleContext;
-
 import com.google.inject.assistedinject.Assisted;
-
 import eu.sqooss.service.logging.LogManager;
-import eu.sqooss.service.scheduler.Job;
 import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.util.StringUtils;
+import org.apache.velocity.VelocityContext;
+import org.joda.time.Period;
+import org.osgi.framework.BundleContext;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 
 /**
  * The WebAdminRender class provides functions for rendering content
@@ -56,12 +53,15 @@ import eu.sqooss.service.util.StringUtils;
  * @author, Boryan Yotov <b.yotov@prosyst.com>
  */
 public class WebAdminRenderer  extends Controller {
+    public static final String SUBTEMPLATE = "subtemplate";
     /**
      * Represents the system time at which the WebAdminRender (and
      * thus the system) was started. This is required for the system
      * uptime display.
      */
     private static long startTime = new Date().getTime();
+
+    private static final String TEMPLATE = "template.html";
 
     private Scheduler sched;
     private LogManager logManager;
@@ -74,142 +74,38 @@ public class WebAdminRenderer  extends Controller {
         this.logManager = logManager;
     }
 
-    /**
-     * Creates and HTML table displaying the details of all the jobs
-     * that have failed whilst the system has been up
-     *
-     * @return a String representing the HTML table
-     */
-    public String renderJobFailStats() {
-        StringBuilder result = new StringBuilder();
-        HashMap<String,Integer> fjobs = sched.getSchedulerStats().getFailedJobTypes();
-        result.append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n");
-        result.append("\t<thead>\n");
-        result.append("\t\t<tr>\n");
-        result.append("\t\t\t<td>Job Type</td>\n");
-        result.append("\t\t\t<td>Num Jobs Failed</td>\n");
-        result.append("\t\t</tr>\n");
-        result.append("\t</thead>\n");
-        result.append("\t<tbody>\n");
-
-        String[] jobfailures = fjobs.keySet().toArray(new String[1]);
-        for(String key : jobfailures) {
-            result.append("\t\t<tr>\n\t\t\t<td>");
-            result.append(key==null ? "No failures" : key);
-            result.append("</td>\n\t\t\t<td>");
-            result.append(key==null ? "&nbsp;" : fjobs.get(key));
-            result.append("\t\t\t</td>\n\t\t</tr>");
-        }
-        result.append("\t</tbody>\n");
-        result.append("</table>");
-        return result.toString();
+    @Action(uri = "/jobs", template = TEMPLATE)
+    public void action_index(HttpServletRequest req, VelocityContext vc)
+    {
+        vc.put("section", 4);
+        vc.put(SUBTEMPLATE, "jobs/index.html");
     }
 
-    /**
-     * Creates and HTML table with information about the jobs that
-     * failed and the recorded exceptions
-     * @return
-     */
-    public String renderFailedJobs() {
-        StringBuilder result = new StringBuilder();
-        Job[] jobs = sched.getFailedQueue();
-        result.append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n");
-        result.append("\t<thead>\n");
-        result.append("\t\t<tr>\n");
-        result.append("\t\t\t<td>Job Type</td>\n");
-        result.append("\t\t\t<td>Exception type</td>\n");
-        result.append("\t\t\t<td>Exception text</td>\n");
-        result.append("\t\t\t<td>Exception backtrace</td>\n");
-        result.append("\t\t</tr>\n");
-        result.append("\t</thead>\n");
-        result.append("\t<tbody>\n");
-
-        if ((jobs != null) && (jobs.length > 0)) {
-            for(Job j: jobs) {
-                if (j == null) continue;
-                result.append("\t\t<tr>\n\t\t\t<td>");
-                if (j.getClass() != null) {
-                    try {
-                        //result.append(j.getClass().getPackage().getName());
-                        //result.append(". " + j.getClass().getSimpleName());
-			result.append(j.toString());
-                    }
-                    catch (NullPointerException ex) {
-                        result.append("<b>NA<b>");
-                    }
-                }
-                else {
-                    result.append("<b>NA<b>");
-                }
-                result.append("</td>\n\t\t\t<td>");
-                Exception e = j.getErrorException();
-                if (e != null) {
-                    try {
-                        result.append(e.getClass().getPackage().getName());
-                        result.append(". " + e.getClass().getSimpleName());
-                    }
-                    catch (NullPointerException ex) {
-                        result.append("<b>NA<b>");
-                    }
-                }
-                else {
-                    result.append("<b>NA</b>");
-                }
-                result.append("</td>\n\t\t\t<td>");
-                try {
-                    result.append(e.getMessage());
-                }
-                catch (NullPointerException ex) {
-                    result.append("<b>NA<b>");
-                }
-                result.append("</td>\n\t\t\t<td>");
-                if ((e != null)
-                        && (e.getStackTrace() != null)) {
-                    for(StackTraceElement m: e.getStackTrace()) {
-                        if (m == null) continue;
-                        result.append(m.getClassName());
-                        result.append(". ");
-                        result.append(m.getMethodName());
-                        result.append("(), (");
-                        result.append(m.getFileName());
-                        result.append(":");
-                        result.append(m.getLineNumber());
-                        result.append(")<br/>");
-                    }
-                }
-                else {
-                    result.append("<b>NA</b>");
-                }
-                result.append("\t\t\t</td>\n\t\t</tr>");
-            }
-        }
-        else {
-            result.append ("<tr><td colspan=\"4\">No failed jobs.</td></tr>");
-        }
-        result.append("\t</tbody>\n");
-        result.append("</table>");
-
-        return result.toString();
+    @Action(uri = "/alljobs", template = TEMPLATE)
+    public void action_failed(HttpServletRequest req, VelocityContext vc)
+    {
+        vc.put("section", 4);
+        vc.put("sched", sched);
+        vc.put(SUBTEMPLATE, "jobs/failed.html");
     }
 
-    /**
-     * Creates an HTML unordered list displaying the contents of the current system log
-     *
-     * @return a String representing the HTML unordered list items
-     */
-    public String renderLogs() {
+    @Action(uri = "/logs", template = TEMPLATE)
+    public void action_logs(HttpServletRequest req, VelocityContext vc)
+    {
+        vc.put("section", 2);
         String[] names = logManager.getRecentEntries();
+        StringBuilder b = new StringBuilder("<h2>Alitheia Logs</h2><ul class=\"logs\">");
 
         if ((names != null) && (names.length > 0)) {
-            StringBuilder b = new StringBuilder();
             for (String s : names) {
-                b.append("\t\t\t\t\t<li>" + StringUtils.makeXHTMLSafe(s) + "</li>\n");
+                b.append("<li>" + StringUtils.makeXHTMLSafe(s) + "</li>");
             }
-
-            return b.toString();
         } else {
-            return "\t\t\t\t\t<li>&lt;none&gt;</li>\n";
+            b.append("<li>&lt;none&gt;</li>");
         }
+
+        b.append("</ul>");
+        vc.put("body", b.toString());
     }
 
     /**
@@ -217,63 +113,10 @@ public class WebAdminRenderer  extends Controller {
      * in dd:hh:mm:ss format
      */
     public static String getUptime() {
-        long remainder;
-        long currentTime = new Date().getTime();
-        long timeRunning = currentTime - startTime;
-
-        // Get the elapsed time in days, hours, mins, secs
-        int days = new Long(timeRunning / 86400000).intValue();
-        remainder = timeRunning % 86400000;
-        int hours = new Long(remainder / 3600000).intValue();
-        remainder = remainder % 3600000;
-        int mins = new Long(remainder / 60000).intValue();
-        remainder = remainder % 60000;
-        int secs = new Long(remainder / 1000).intValue();
-
-        return String.format("%d:%02d:%02d:%02d", days, hours, mins, secs);
-    }
-    
-
-    public String renderJobWaitStats() {
-        StringBuilder result = new StringBuilder();
-        HashMap<String,Integer> wjobs = sched.getSchedulerStats().getWaitingJobTypes();
-        result.append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n");
-        result.append("\t<thead>\n");
-        result.append("\t\t<tr>\n");
-        result.append("\t\t\t<td>Job Type</td>\n");
-        result.append("\t\t\t<td>Num Jobs Waiting</td>\n");
-        result.append("\t\t</tr>\n");
-        result.append("\t</thead>\n");
-        result.append("\t<tbody>\n");
-
-        String[] jobfailures = wjobs.keySet().toArray(new String[1]);
-        for(String key : jobfailures) {
-            result.append("\t\t<tr>\n\t\t\t<td>");
-            result.append(key==null ? "No failures" : key);
-            result.append("</td>\n\t\t\t<td>");
-            result.append(key==null ? "&nbsp;" : wjobs.get(key));
-            result.append("\t\t\t</td>\n\t\t</tr>");
-        }
-        result.append("\t</tbody>\n");
-        result.append("</table>");
-        return result.toString();
+        Period p = new Period(startTime, new Date().getTime());
+        return String.format("%d:%02d:%02d:%02d", p.getDays(), p.getHours(), p.getMinutes(), p.getSeconds());
     }
 
-    public String renderJobRunStats() {
-        StringBuilder result = new StringBuilder();
-        List<String> rjobs = sched.getSchedulerStats().getRunJobs();
-        if (rjobs.size() == 0) {
-            return "No running jobs";
-        }
-        result.append("<ul>\n");
-        for(String s : rjobs) {
-            result.append("\t<li>");
-            result.append(s);
-            result.append("\t</li>\n");
-        }
-        result.append("</ul>\n");
-        return result.toString();
-    }
 }
 
 //vi: ai nosi sw=4 ts=4 expandtab

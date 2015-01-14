@@ -129,9 +129,6 @@ public class AdminServlet extends HttpServlet {
 
         // Create the template content map
         templateContent = new Hashtable<>();
-        templateContent.put("/logs", "logs.html");
-        templateContent.put("/jobs", "jobs.html");
-        templateContent.put("/alljobs", "alljobs.html");
         templateContent.put("/users", "users.html");
         templateContent.put("/rules", "rules.html");
         templateContent.put("/jobstat", "jobstat.html");
