@@ -1,0 +1,67 @@
+<form id="metrics" name="metrics" method="post" action="/index">
+	#if($noPlugins)
+		#parse($noPlugins)
+	#elseif($createProperty)
+		#parse($createProperty)
+	#elseif($pluginPage)
+		#parse($pluginPage)
+	#else
+	<fieldset>
+		<legend>All plug-ins</legend>
+		<table>
+		<thead>
+        	<tr class="head">
+            	<td class="head" style="width: 80px;">Status</td>
+            	<td class="head" style="width: 30%;">Name</td>
+            	<td class="head" style="width: 40%;">Class</td>
+            	<td class="head">Version</td>
+           	</tr>
+        </thead>
+        <tbody>
+        #foreach($i in $pluginList)
+        	#if(!$i.getInstalled())
+        		<tr class="edit" onclick="javascript:document.getElementById('${reqParHashcode}').value='${i.getHashcode()}';document.metrics.submit();">
+                      <td class="trans"><img src="/edit.png" alt="[Edit]">&nbsp;Registered</td>
+                      <td class="trans">$i.getPluginName()</td>
+                      <td class="trans">$metrics.getPluginClass($i)</td>
+                      <td class="trans">$i.getPluginVersion()</td>
+                </tr>
+        	#end
+        #end
+        #foreach($i in $pluginList)
+        	#if($i.getInstalled())
+        		<tr class="edit" onclick="javascript:document.getElementById('${reqParHashcode}').value='${i.getHashcode()}';document.metrics.submit();">
+                      <td class="trans"><img src="/edit.png" alt="[Edit]">&nbsp;Registered</td>
+                      <td class="trans">$i.getPluginName()</td>
+                      <td class="trans">$pluginsView.getPluginClass($i)</td>
+                      <td class="trans">$i.getPluginVersion()</td>
+                </tr>
+        	#end
+        #end
+        </tbody>
+        </table>
+        <span>
+        	<input type="checkbox" 
+        		#if($reqValShowProp)
+        		"checked"
+        		#end
+        		onclick="javascript:document.getElementById('$reqParShowProp').value = this.checked;document.getElementById('$reqParHashcode').value='';document.metrics.submit();">Display properties
+            <input type="checkbox" 
+            	#if($reqValShowActv)
+        		"checked"
+        		#end
+            	onclick="javascript:document.getElementById('$reqParShowActv').value = this.checked;document.getElementById('$reqParHashcode').value='';document.metrics.submit();">Display activators
+         </span>
+         </fieldset>
+         
+         <input type="hidden" id="$reqParAction" name="$reqParAction" value="">
+         <input type="hidden" id="$reqParHashcode" name="$reqParHashcode" value="$!reqValHashcode">
+         <input type="hidden" id="$reqParPropName" name="reqParPropName" value="$!reqValPropName">
+         <input type="hidden" id="$reqParPropDescr" name="$reqParPropDescr" value="$!reqValPropDescr">
+         <input type="hidden" id="$reqParPropType" name="$reqParPropType" value="$!reqValPropType">
+         <input type="hidden" id="$reqParPropValue" name="$reqParPropValue" value="$!reqValPropValue">        
+         <input type="hidden" id="$reqParShowProp" name="$reqParShowProp" value="$reqValShowProp">
+         <input type="hidden" id="$reqParShowActv" name="$reqParShowActv" value="$reqValShowActv">
+         
+	#end
+</form>

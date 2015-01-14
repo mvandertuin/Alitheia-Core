@@ -1,0 +1,79 @@
+<fieldset>
+	<legend>
+		#if($update)
+		Update property of
+		#else
+		Create property for $plugin.getPluginName()
+		#end
+    </legend>
+
+    <table class="borderless">
+    <tr>
+    	<td class="borderless" style="width:100px;">
+    		<b>Name</b>
+    	</td>
+    	<td class="borderless">
+    		#if($update)
+    		$propertyName
+    		#else
+    		<input type="text" class="form" id="$reqParPropName" name="$reqParPropName" value="$propertyName">
+		#end
+    	</td>
+    </tr>
+	<tr>
+		<td class="borderless" style="width:100px;">
+    		<b>Description</b>
+    	</td>
+    	<td class="borderless">
+    		#if($update)
+    		$propertyDescriptor
+    		#else
+    		<input type="text" class="form" id="$reqParPropDescr" name="$reqParPropDescr" value="$propertyDescriptor">
+		#end
+    	</td>
+    </tr>
+    <tr>
+		<td class="borderless" style="width:100px;">
+    		<b>Type</b>
+    	</td>
+    	<td class="borderless">
+    		#if($update)
+    		$propertyType
+    		#else
+			<select class="form" id="$reqParPropType" name="$reqParPropType">
+				#foreach($type in $ConfigurationTypes)
+					<option value="$type.toString()" 
+						#if ($type.toString().equals($propertyType))
+						"selected"
+						#endif
+					>
+					$type.toString()
+					</option>
+				#end
+			</select>
+			#end
+		</td>
+	</tr>
+	<tr>
+		<td class="borderless" style="width:100px;">
+    		<b>Value</b>
+    	</td>
+    	<td class="borderless">
+    		<input type="text" class="form" id="$reqParPropValue" name="$reqParPropValue" value="$propertyValue">
+    	</td>
+    </tr>	
+    <tr>
+		<td colspan="2" class="borderless">
+    		<input type="button" class="install" style="width:100px;" value="$propertyAction" onclick=\"javascript:document.getElementById('$reqParAction').value('$actValConAddProp');document.metrics.submit();">
+			#if(update)
+			<input type="button" class="install" style="width:100px;" value="Remove" onclick=\"javascript:document.getElementById('$reqParAction').value('$actValConRemProp');document.metrics.submit();">
+			#end
+			<input type="button" class="install" style="width:100px;" value="Cancel" onclick=\"javascript:document.metrics.submit();">						
+    	</td>
+    </tr>
+    </table>
+ </fieldset>
+
+    
+    
+		
