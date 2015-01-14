@@ -1,23 +1,35 @@
 #set($section=3)
 #parse("header.inc")
-      <div id="main">
+<div id="main">
 #parse("menu.inc")
-        <div id="contents">
 
-          <h2>$tr.label("projects_mngm")</h2>
-          <div id="table">
-            #parse($subtemplate)
-            <h2>Old</h2>
-            $projects.render($request)
-          </div>
+<div id="contents">
+    #if($errors)
+    <fieldset>
+        <legend>Errors</legend>
+        $!errors
+    </fieldset>
+    #end
 
-          <h2>$tr.label("install_new_project")</h2>
-          <form method="post" action="/projects_diradd">
-            project.properties file location
-            <input name="properties" type="text" alt="Enter the path to the project.properties file of the project you want to install" class="form" size="40"/>
-            <input type="submit" value="Install Project"/>
-          </form>
-        </div>
+    #if($RESULTS)
+    <fieldset>
+        <legend>Message</legend>
+        $!RESULTS
+    </fieldset>
+    #end
 
-      </div>
+    <h2>$tr.label("projects_mngm")</h2>
+    <div id="table">
+        #parse($subtemplate)
+    </div>
+
+    <h2>$tr.label("install_new_project")</h2>
+    <form method="post" action="/projects_diradd">
+        project.properties file location
+        <input name="properties" type="text" alt="Enter the path to the project.properties file of the project you want to install" class="form" size="40"/>
+        <input type="submit" value="Install Project"/>
+    </form>
+</div>
+
+</div>
 #parse("sidebar.inc")
