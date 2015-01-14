@@ -16,5 +16,5 @@ public @interface Action {
     public String method() default "GET";
 
     public static final String GET = "GET";
-    public static final String POST = "GET";
+    public static final String POST = "POST";
 }
