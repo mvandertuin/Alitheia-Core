@@ -43,6 +43,8 @@ public class WebAdminModule extends AbstractModule {
 					"org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
 			ve.setProperty("runtime.log.logsystem.log4j.category",
 					Logger.NAME_SQOOSS_WEBADMIN);
+			ve.setProperty("velocimacro.library.autoreload", true);
+			ve.setProperty("file.resource.loader.cache", false);
 			String resourceLoader = "classpath";
 			ve.setProperty(RuntimeConstants.RESOURCE_LOADER, resourceLoader);
 			ve.setProperty(resourceLoader + "."
