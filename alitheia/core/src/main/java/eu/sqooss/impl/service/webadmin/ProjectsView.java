@@ -38,6 +38,7 @@ import java.util.*;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import eu.sqooss.service.db.*;
 import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 
@@ -49,12 +50,6 @@ import eu.sqooss.service.admin.AdminService;
 import eu.sqooss.service.admin.actions.AddProject;
 import eu.sqooss.service.admin.actions.UpdateProject;
 import eu.sqooss.service.cluster.ClusterNodeService;
-import eu.sqooss.service.db.Bug;
-import eu.sqooss.service.db.ClusterNode;
-import eu.sqooss.service.db.DBService;
-import eu.sqooss.service.db.MailMessage;
-import eu.sqooss.service.db.ProjectVersion;
-import eu.sqooss.service.db.StoredProject;
 import eu.sqooss.service.metricactivator.MetricActivator;
 import eu.sqooss.service.pa.PluginAdmin;
 import eu.sqooss.service.pa.PluginInfo;
@@ -62,6 +57,7 @@ import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.scheduler.SchedulerException;
 import eu.sqooss.service.updater.UpdaterService;
 import eu.sqooss.service.updater.UpdaterService.UpdaterStage;
+import sun.security.krb5.Config;
 
 public class ProjectsView extends AbstractView {
     // Script for submitting this page
@@ -211,12 +207,8 @@ public class ProjectsView extends AbstractView {
         StringBuilder e = new StringBuilder();
         StoredProject proj = addProject(vc, req);
 
-        if(proj == null){
-            vc.put("subtemplate", "errormessage.html");
-        } else {
-            vc.put("subtemplate", "projects/edit.html");
-            general(req, vc, proj);
-        }
+        vc.put("subtemplate", "projects/add.html");
+        general(req, vc, proj);
     }
 
     @Action(uri = "/projects_diradd", template = "projects.html", method = "POST")
@@ -252,7 +244,8 @@ public class ProjectsView extends AbstractView {
         StoredProject selProject = selectedProject(req);
         StringBuilder e = new StringBuilder();
         selProject = removeProject(vc, selProject, 0);
-        vc.put("selectedProject", selProject);
+
+        general(req, vc, selProject);
     }
 
     @Action(uri = "/projects_update", template = "projects.html", method = "POST")
@@ -298,15 +291,23 @@ public class ProjectsView extends AbstractView {
   
     private StoredProject addProject(VelocityContext vc, HttpServletRequest r) {
     	AdminAction aa = admin.create(AddProject.MNEMONIC);
-    	aa.addArg("scm", r.getParameter(REQ_PAR_PRJ_CODE));
-    	aa.addArg("name", r.getParameter(REQ_PAR_PRJ_NAME));
-    	aa.addArg("bts", r.getParameter(REQ_PAR_PRJ_BUG));
-    	aa.addArg("mail", r.getParameter(REQ_PAR_PRJ_MAIL));
-    	aa.addArg("web", r.getParameter(REQ_PAR_PRJ_WEB));
+    	aa.addArg(ConfigOption.PROJECT_SCM_URL.getName(), r.getParameter(REQ_PAR_PRJ_CODE));
+    	aa.addArg(ConfigOption.PROJECT_NAME.getName(), r.getParameter(REQ_PAR_PRJ_NAME));
+    	aa.addArg(ConfigOption.PROJECT_BTS_URL.getName(), r.getParameter(REQ_PAR_PRJ_BUG));
+    	aa.addArg(ConfigOption.PROJECT_ML_URL.getName(), r.getParameter(REQ_PAR_PRJ_MAIL));
+    	aa.addArg(ConfigOption.PROJECT_WEBSITE.getName(), r.getParameter(REQ_PAR_PRJ_WEB));
+        aa.addArg(ConfigOption.PROJECT_CONTACT.getName(), r.getParameter(REQ_PAR_PRJ_CONT));
+        admin.execute(aa);
 
     	if (aa.hasErrors()) {
             error(vc, aa.errors());
-            return null;
+            StoredProject falsy = new StoredProject(r.getParameter(REQ_PAR_PRJ_NAME));
+            falsy.setScmUrl(r.getParameter(REQ_PAR_PRJ_CODE));
+            falsy.setBtsUrl(r.getParameter(REQ_PAR_PRJ_BUG));
+            falsy.setMailUrl(r.getParameter(REQ_PAR_PRJ_MAIL));
+            falsy.setWebsiteUrl(r.getParameter(REQ_PAR_PRJ_WEB));
+            falsy.setContactUrl(r.getParameter(REQ_PAR_PRJ_CONT));
+            return falsy;
     	} else {
             result(vc, aa.results());
             return StoredProject.getProjectByName(r.getParameter(REQ_PAR_PRJ_NAME));
