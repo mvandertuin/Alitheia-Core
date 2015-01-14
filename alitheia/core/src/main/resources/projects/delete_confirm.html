@@ -6,11 +6,11 @@
         </td>
         <td class="borderless">
             <!-- Confirm -->
-            <form action="/projects_delete" method="post">
+            <form action="/projects_delete" method="post" style="display:inline">
                 <button type="submit" name="projectId" value="$selectedProject.Id">$tr.label("l0006")</button>
             </form>
             <!-- Cancel -->
-            <form action="/projects" method="get">
+            <form action="/projects" method="get" style="display:inline">
                 <button type="submit" name="projectId" value="$selectedProject.Id">$tr.label("l0004")</button>
             </form>
         </td>

@@ -188,10 +188,7 @@ public class ProjectsView extends AbstractView {
     {
         StoredProject selProject = selectedProject(req);
 
-        if(selProject == null)
-            vc.put("subtemplate", "projects/list.html");
-        else
-            vc.put("subtemplate", "projects/edit.html");
+        vc.put("subtemplate", selProject == null ? "projects/list.html" : "projects/edit.html");
 
         general(req, vc, selProject);
     }
@@ -200,6 +197,18 @@ public class ProjectsView extends AbstractView {
     public void add(HttpServletRequest req, VelocityContext vc)
     {
         vc.put("subtemplate", "projects/add.html");
+        vc.put("form", projectTable(req));
+    }
+
+    private Table projectTable(HttpServletRequest req){
+        return new Table(
+            new InputRow("Project name",    "projectName",      req.getParameter(REQ_PAR_PRJ_NAME)),
+            new InputRow("Homepage",        "projectHomepage",  req.getParameter(REQ_PAR_PRJ_WEB )),
+            new InputRow("Contact e-mail",  "projectContact",   req.getParameter(REQ_PAR_PRJ_CONT)),
+            new InputRow("Bug database",    "projectBL",        req.getParameter(REQ_PAR_PRJ_BUG )),
+            new InputRow("Mailing list",    "projectML",        req.getParameter(REQ_PAR_PRJ_MAIL)),
+            new InputRow("Source code",     "projectSCM",       req.getParameter(REQ_PAR_PRJ_CODE))
+        );
     }
 
     @Action(uri = "/projects_add", template = "projects.html", method = "POST")
@@ -208,7 +217,8 @@ public class ProjectsView extends AbstractView {
         StringBuilder e = new StringBuilder();
         StoredProject proj = addProject(vc, req);
 
-        vc.put("subtemplate", "projects/add.html");
+        vc.put("subtemplate", proj == null ? "projects/add.html" : "projects/list.html");
+
         general(req, vc, proj);
     }
 
@@ -293,23 +303,19 @@ public class ProjectsView extends AbstractView {
   
     private StoredProject addProject(VelocityContext vc, HttpServletRequest r) {
     	AdminAction aa = admin.create(AddProject.MNEMONIC);
-    	aa.addArg(ConfigOption.PROJECT_SCM_URL.getName(), r.getParameter(REQ_PAR_PRJ_CODE));
-    	aa.addArg(ConfigOption.PROJECT_NAME.getName(), r.getParameter(REQ_PAR_PRJ_NAME));
-    	aa.addArg(ConfigOption.PROJECT_BTS_URL.getName(), r.getParameter(REQ_PAR_PRJ_BUG));
-    	aa.addArg(ConfigOption.PROJECT_ML_URL.getName(), r.getParameter(REQ_PAR_PRJ_MAIL));
-    	aa.addArg(ConfigOption.PROJECT_WEBSITE.getName(), r.getParameter(REQ_PAR_PRJ_WEB));
-        aa.addArg(ConfigOption.PROJECT_CONTACT.getName(), r.getParameter(REQ_PAR_PRJ_CONT));
+        // Properties below correspond to where AddProject will be looking
+    	aa.addArg("scm",     r.getParameter(REQ_PAR_PRJ_CODE));
+    	aa.addArg("name",    r.getParameter(REQ_PAR_PRJ_NAME));
+    	aa.addArg("bts",     r.getParameter(REQ_PAR_PRJ_BUG));
+    	aa.addArg("mail",    r.getParameter(REQ_PAR_PRJ_MAIL));
+    	aa.addArg("web",     r.getParameter(REQ_PAR_PRJ_WEB));
+        aa.addArg("contact", r.getParameter(REQ_PAR_PRJ_CONT));
         admin.execute(aa);
 
     	if (aa.hasErrors()) {
             error(vc, aa.errors());
-            StoredProject falsy = new StoredProject(r.getParameter(REQ_PAR_PRJ_NAME));
-            falsy.setScmUrl(r.getParameter(REQ_PAR_PRJ_CODE));
-            falsy.setBtsUrl(r.getParameter(REQ_PAR_PRJ_BUG));
-            falsy.setMailUrl(r.getParameter(REQ_PAR_PRJ_MAIL));
-            falsy.setWebsiteUrl(r.getParameter(REQ_PAR_PRJ_WEB));
-            falsy.setContactUrl(r.getParameter(REQ_PAR_PRJ_CONT));
-            return falsy;
+            vc.put("form", projectTable(r));
+            return null;
     	} else {
             result(vc, aa.results());
             return StoredProject.getProjectByName(r.getParameter(REQ_PAR_PRJ_NAME));

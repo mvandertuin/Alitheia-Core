@@ -19,10 +19,11 @@
 #end
 
 #macro( table $table )
-    #foreach($row in $table)
-        #if ($row.class.simpleName.equals("InfoRow"))
+    #foreach($row in $table.rows)
+        #if($row.class.simpleName.equals("InfoRow"))
             #row_info($row.title, $row.value)
-        #else ($row.class.simpleName.equals("InputRow"))
+        #end
+        #if($row.class.simpleName.equals("InputRow"))
             #row_input($row.title, $row.name, $row.value)
         #end
     #end
