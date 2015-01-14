@@ -84,5 +84,19 @@
          		</tr>
      		</thead>
      		<tbody>
-    		
+    	#if($!pluginConfigs || $pluginConfigs.isEmpty())
+     	<tr>
+     		<td colspan="3" class="noattr">This plug-in has no configuration properties."</td>
+     	</tr>
+     	#else
+     		#foreach($config in $pluginConfigs)
+     			<tr class="edit" onclick="javascript:document.getElementById('${reqParAction}')>
+     				<td>$.getId()</td>
+     				<td>$metric.getMnemonic()</td>
+     				<td>$metric.getMetricType().getType()</td>
+     				<td>$metric.getDescription()</td>
+     		#end
+     	#end
+     </table>
+     </fieldset>			
 #end
