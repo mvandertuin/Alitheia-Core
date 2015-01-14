@@ -1,10 +1,11 @@
 <fieldset>
 	<legend>
 		#if($update)
-		Update property of
+		Update property of 
 		#else
-		Create property for $plugin.getPluginName()
+		Create property for 
 		#end
+		$plugin.getPluginName()
     </legend>
 
     <table class="borderless">
@@ -17,7 +18,7 @@
     		$propertyName
     		#else
     		<input type="text" class="form" id="$reqParPropName" name="$reqParPropName" value="$propertyName">
-		#end
+			#end
     	</td>
     </tr>
 	<tr>
@@ -29,7 +30,7 @@
     		$propertyDescriptor
     		#else
     		<input type="text" class="form" id="$reqParPropDescr" name="$reqParPropDescr" value="$propertyDescriptor">
-		#end
+			#end
     	</td>
     </tr>
     <tr>
@@ -45,7 +46,7 @@
 					<option value="$type.toString()" 
 						#if ($type.toString().equals($propertyType))
 						"selected"
-						#endif
+						#end
 					>
 					$type.toString()
 					</option>
@@ -64,16 +65,12 @@
     </tr>	
     <tr>
 		<td colspan="2" class="borderless">
-    		<input type="button" class="install" style="width:100px;" value="$propertyAction" onclick=\"javascript:document.getElementById('$reqParAction').value('$actValConAddProp');document.metrics.submit();">
-			#if(update)
-			<input type="button" class="install" style="width:100px;" value="Remove" onclick=\"javascript:document.getElementById('$reqParAction').value('$actValConRemProp');document.metrics.submit();">
+    		<input type="button" class="install" style="width:100px;" value="$propertyAction" onclick="javascript:document.getElementById('$reqParAction').value('$actValConAddProp');document.metrics.submit();">
+			#if($update)
+			<input type="button" class="install" style="width:100px;" value="Remove" onclick="javascript:document.getElementById('$reqParAction').value('$actValConRemProp');document.metrics.submit();">
 			#end
-			<input type="button" class="install" style="width:100px;" value="Cancel" onclick=\"javascript:document.metrics.submit();">						
+			<input type="button" class="install" style="width:100px;" value="Cancel" onclick="javascript:document.metrics.submit();">						
     	</td>
     </tr>
     </table>
- </fieldset>
-
-    
-    
-		
+ </fieldset>	

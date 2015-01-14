@@ -62,14 +62,31 @@ public class PluginsView extends AbstractView{
                           i.getServiceRef().getProperty(
                                   Constants.OBJECTCLASS)),",");
     }
+    
+    public Set<PluginConfiguration> getPluginConfigurations(PluginInfo i) {
+    	return i.getConfiguration();
+    }
 
+    public Set<Class<? extends DAObject>> getPluginActivators(PluginInfo i){
+    	return i.getActivationTypes();
+    }
 
-    @Action(uri = "/index", template = "index.html")
+    @Action(uri = "/index", template = "index.html", method="GET")
+    public void indexGet(HttpServletRequest req, VelocityContext vc){
+    	all(req,vc);
+    }
+    
+    @Action(uri = "/", template = "index.html", method="GET")
+    public void allGet(HttpServletRequest req, VelocityContext vc){
+    	all(req,vc);
+    }
+    
+    @Action(uri = "/index", template = "index.html", method="POST")
     public void index(HttpServletRequest req, VelocityContext vc){
     	all(req,vc);
     }
     
-    @Action(uri = "/", template = "index.html")
+    @Action(uri = "/", template = "index.html", method="POST")
     public void all(HttpServletRequest req, VelocityContext vc){
         // Stores the assembled HTML content
         StringBuilder b = new StringBuilder("\n");
@@ -349,9 +366,8 @@ public class PluginsView extends AbstractView{
             	// Input field values are stored here
                 String value = null;
                 // Check for a property update request
-                boolean update = selPI.hasConfProp(
-                        reqValPropName, reqValPropType);
-                vc.put("update", true);
+                boolean update = selPI.hasConfProp(reqValPropName, reqValPropType);
+                vc.put("update", update);
                 vc.put("plugin",selPI);
 
                 // Property's name
@@ -380,7 +396,6 @@ public class PluginsView extends AbstractView{
             // Plug-in editor
             // ===============================================================
             else if (selPI != null) {
-                vc.put("plugin",selPI);
                 //------------------------------------------------------------
                 // Registered metrics, activators and configuration 
                 //------------------------------------------------------------
@@ -393,79 +408,7 @@ public class PluginsView extends AbstractView{
                     // Get the plug-in's configuration set
                     Set<PluginConfiguration> config = Plugin.getPluginByHashcode(selPI.getHashcode()).getConfigurations();
                     vc.put("pluginConfigs", config);
-                    if ((config == null) || (config.isEmpty())) {
-                        b.append(sp(in++) + "<tr>");
-                        b.append(sp(in) + "<td colspan=\"3\" class=\"noattr\">"
-                                + "This plug-in has no configuration properties."
-                                + "</td>\n");
-                        b.append(sp(--in)+ "</tr>\n");
-                    }
-                    else {
-                        for (PluginConfiguration param : config) {
-                            b.append(sp(in++) + "<tr class=\"edit\""
-                                    + " onclick=\"javascript:"
-                                    + "document.getElementById('"
-                                    + reqParAction + "').value='"
-                                    + actValReqUpdProp + "';"
-                                    + "document.getElementById('"
-                                    + reqParPropName + "').value='"
-                                    + param.getName() + "';"
-                                    + "document.getElementById('"
-                                    + reqParPropType + "').value='"
-                                    + param.getType() + "';"
-                                    + "document.getElementById('"
-                                    + reqParPropDescr + "').value='"
-                                    + param.getMsg() + "';"
-                                    + "document.getElementById('"
-                                    + reqParPropValue + "').value='"
-                                    + param.getValue() + "';"
-                                    + "document.metrics.submit();\""
-                                    + ">\n");
-                            // Property's name and description
-                            String description = param.getMsg();
-                            if (param.getMsg() == null)
-                                description = "No description available.";
-                            b.append(sp(in) + "<td class=\"trans\""
-                                    + " title=\"" + description + "\">"
-                                    + "<img src=\"/edit.png\" alt=\"[Edit]\"/>"
-                                    + "&nbsp;" + param.getName()
-                                    + "</td>\n");
-                            // Property's type
-                            b.append(sp(in) + "<td class=\"trans\">"
-                                    + param.getType()
-                                    + "</td>\n");
-                            // Property's value
-                            b.append(sp(in) + "<td class=\"trans\">"
-                                    + param.getValue()
-                                    + "</td>\n");
-                            b.append(sp(--in)+ "</tr>\n");
-                        }
-                    }
-                    // Command tool-bar
-                    b.append(sp(in) + "<tr>\n");
-                    b.append(sp(++in) + "<td colspan=\"3\">\n");
-                    b.append(sp(++in) + "<input type=\"button\""
-                            + " class=\"install\""
-                            + " style=\"width: 100px;\""
-                            + " value=\"Add property\""
-                            + " onclick=\"javascript:"
-                            + "document.getElementById('"
-                            + reqParAction + "').value='"
-                            + actValReqAddProp + "';"
-                            + "document.metrics.submit();\""
-                            + ">\n");
-                    b.append(sp(--in) + "</td>\n");
-                    b.append(sp(--in) + "</tr>\n");
-                    // Close the properties table
-                    b.append(sp(--in) + "</tbody>\n");
-                    // Close the properties table
-                    b.append(sp(--in) + "</table>\n");
-                    // Close the properties field-set
-                    b.append(sp(--in) + "</fieldset>\n");
                 }
-
-                // Close the plug-in field-set
-                b.append(sp(--in) + "</fieldset>\n");
             }
             // ===============================================================
             // Plug-ins list
@@ -474,10 +417,9 @@ public class PluginsView extends AbstractView{
                 // Retrieve information for all registered metric plug-ins
                 Collection<PluginInfo> l = pa.listPlugins();
             	vc.put("pluginList",l);
-            	vc.put("reqParHashcode", reqParHashcode);
+            }
         }
         
-    }
     }
     
     /**
