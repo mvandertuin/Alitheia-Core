@@ -23,7 +23,7 @@
             <td class="trans">${project.Id}</td>
             <td class="trans">
                 #if(!$project.Selected)
-                <form method="get" action="/projects">
+                <form method="get" action="/projects" style="display: inline">
                 <button type="submit" name="projectId" class="install" style="width:100px" value="$project.Id">$tr.label("btn_info")</button>
                 </form>
                 #end
