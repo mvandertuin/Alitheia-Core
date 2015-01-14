@@ -126,6 +126,8 @@ public class ProjectsView extends AbstractView {
         // Initialize the resource bundles with the request's locale
         initResources(req.getLocale());
 
+        vc.put("selectedProject", selProject);
+
         // Get this clusters projects
         Set<StoredProject> projects = ClusterNode.thisNode().getProjects();
         // Get the metrics
@@ -185,7 +187,6 @@ public class ProjectsView extends AbstractView {
     public void list(HttpServletRequest req, VelocityContext vc)
     {
         StoredProject selProject = selectedProject(req);
-        vc.put("selectedProject", selProject);
 
         if(selProject == null)
             vc.put("subtemplate", "projects/list.html");
@@ -226,7 +227,8 @@ public class ProjectsView extends AbstractView {
             result(vc, "Added project " + req.getParameter(REQ_PAR_PRJ_NAME));
         }
 
-        general(req, vc, StoredProject.getProjectByName(req.getParameter(REQ_PAR_PRJ_NAME)));
+        StoredProject selProject = StoredProject.getProjectByName(req.getParameter(REQ_PAR_PRJ_NAME));
+        general(req, vc, selProject);
     }
 
     @Action(uri = "/projects_delete", template = "projects.html", method = "GET")
@@ -254,7 +256,7 @@ public class ProjectsView extends AbstractView {
         String scope = req.getParameter("scope");
         StoredProject selProject = selectedProject(req);
 
-        if(selProject == null){
+        if(selProject == null || scope == null){
             error(vc, "First select a project before selecting an updater.");
             return;
         } else if(scope.equals("single")){

@@ -76,39 +76,41 @@ public class ProjectsViewTest extends HTMLTest {
     }
 
     @Test
-    public void testIndex() throws Exception {
+    public void testIndex() {
         projectsView.list(request, vc);
-        String result = render("projects/list.html", request, vc);
+        String result = render(null, request, vc);
         assertWhiteSpaceEqual(index, result);
     }
 
     @Test
     public void testCreateFrom_AddProject() {
-        request.setParameter(ProjectsView.REQ_PAR_ACTION, ProjectsView.ACT_CON_ADD_PROJECT);
-        String result = projectsView.render(request);
+        projectsView.add(request, vc);
+        String result = render(null, request, vc);
         assertWhiteSpaceEqual(addProject, result);
     }
 
     @Test
     public void testRemove(){
-        request.setParameter(ProjectsView.REQ_PAR_ACTION, ProjectsView.ACT_CON_REM_PROJECT);
         request.setParameter(ProjectsView.REQ_PAR_PROJECT_ID, "1");
-        String result = projectsView.render(request);
+        projectsView.deleteConfirm(request, vc);
+        String result = render(null, request, vc);
         assertWhiteSpaceEqual(removeProject, result);
     }
 
     @Test
     public void testUpdate(){
-        request.setParameter(ProjectsView.REQ_PAR_ACTION, ProjectsView.ACT_CON_UPD);
-        request.setParameter(ProjectsView.REQ_PAR_UPD, "mnem");
+        request.setParameter("updater", "mnem");
+        request.setParameter("scope", "single");
         request.setParameter(ProjectsView.REQ_PAR_PROJECT_ID, "1");
+//        request.setParameter(ProjectsView.REQ_PAR_ACTION, ProjectsView.ACT_CON_UPD);
 
         Updater updater = mock(Updater.class);
         when(updsrv.getUpdaters(eq(proj), any(UpdaterService.UpdaterStage.class))).thenReturn(Collections.singleton(updater));
         when(updater.mnem()).thenReturn("updater-mnem");
         when(updater.descr()).thenReturn("updater-descr");
 
-        String result = projectsView.render(request);
+        projectsView.update(request, vc);
+        String result = render(null, request, vc);
         assertWhiteSpaceEqual(updateProject, result);
     }
 
@@ -142,13 +144,13 @@ public class ProjectsViewTest extends HTMLTest {
 
         testShowLastAppliedVersion();
 
-        String result = projectsView.render(request);
+        projectsView.list(request, vc);
+        String result = render(null, request, vc);
         assertWhiteSpaceEqual(projectList, result);
     }
 
     @Test
     public void testShowProject(){
-        request.setParameter(ProjectsView.REQ_PAR_ACTION, ProjectsView.ACT_REQ_SHOW_PROJECT);
         request.setParameter(ProjectsView.REQ_PAR_PROJECT_ID, "1");
 
         when(proj.getName()).thenReturn("ProjName");
@@ -158,20 +160,20 @@ public class ProjectsViewTest extends HTMLTest {
         when(proj.getMailUrl()).thenReturn("ProjMailUrl");
         when(proj.getScmUrl()).thenReturn("ProjSCMUrl");
 
-        String result = projectsView.render(request);
+        projectsView.list(request, vc);
+        String result = render(null, request, vc);
         assertWhiteSpaceEqual(showProject, result);
     }
 
     @Test
     public void testAddProjectForm(){
-        request.setParameter(ProjectsView.REQ_PAR_ACTION, ProjectsView.ACT_REQ_ADD_PROJECT);
-        String result = projectsView.render(request);
+        projectsView.add(request, vc);
+        String result = render(null, request, vc);
         assertWhiteSpaceEqual(addProjectForm, result);
     }
 
     @Test
     public void testRemoveConfirmation(){
-        request.setParameter(ProjectsView.REQ_PAR_ACTION, ProjectsView.ACT_REQ_REM_PROJECT);
         request.setParameter(ProjectsView.REQ_PAR_PROJECT_ID, "1");
 
         when(proj.getName()).thenReturn("ProjName");
@@ -181,7 +183,8 @@ public class ProjectsViewTest extends HTMLTest {
         when(proj.getMailUrl()).thenReturn("ProjMailUrl");
         when(proj.getScmUrl()).thenReturn("ProjSCMUrl");
 
-        String result = projectsView.render(request);
+        projectsView.deleteConfirm(request, vc);
+        String result = render(null, request, vc);
         assertWhiteSpaceEqual(removeProjectConfirmation, result);
     }
 
