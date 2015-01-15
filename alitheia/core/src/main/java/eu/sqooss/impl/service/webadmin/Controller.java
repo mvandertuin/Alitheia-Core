@@ -39,10 +39,12 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
-public abstract class AbstractView {
+public abstract class Controller {
     // Core components
     protected static ServiceReference srefCore = null;
 
@@ -72,7 +74,7 @@ public abstract class AbstractView {
      * 
      * @param bundlecontext the parent bundle's context
      */
-    public AbstractView(BundleContext bundlecontext) {
+    public Controller(BundleContext bundlecontext) {
         // Keep the Velocity context instance
         this.bc = bundlecontext;
     }
@@ -86,6 +88,34 @@ public abstract class AbstractView {
         resLbl = getLabelsBundle(locale);
         resErr = getErrorsBundle(locale);
         resMsg = getMessagesBundle(locale);
+    }
+
+    private static void addToContextList(VelocityContext vc, String key, String value){
+        List<String> existing = (List<String>) vc.get(key);
+        if(existing == null)
+            existing = new ArrayList<String>();
+        existing.add(value);
+        vc.put(key, existing);
+    }
+
+    protected static void error(VelocityContext vc, String message){
+        addToContextList(vc, "errors", message);
+    }
+
+    protected static void error(VelocityContext vc, Map<String,Object> messages){
+        if(messages != null)
+        for(Object a : messages.values())
+            error(vc, a.toString());
+    }
+
+    protected static void result(VelocityContext vc, String message){
+        addToContextList(vc, "results", message);
+    }
+
+    protected static void result(VelocityContext vc, Map<String,Object> messages){
+        if(messages != null)
+        for(Object a : messages.values())
+            result(vc, a.toString());
     }
 
     /**
@@ -443,6 +473,10 @@ public abstract class AbstractView {
     }
 
     public class Table {
+        public Row[] getRows() {
+            return rows;
+        }
+
         public Row[] rows;
 
         public Table(Row... rows){
@@ -470,9 +504,10 @@ public abstract class AbstractView {
             return value;
         }
 
-        public InputRow(String name, String value){
+        public InputRow(String title, String name, String value){
+            this.title = title;
             this.name = name;
-            this.value = value;
+            this.value = escapeHtml(value);
         }
     }
 
@@ -482,7 +517,8 @@ public abstract class AbstractView {
         }
 
         public String value;
-        public InfoRow(String value){
+        public InfoRow(String title, String value){
+            this.title = title;
             this.value = value;
         }
     }

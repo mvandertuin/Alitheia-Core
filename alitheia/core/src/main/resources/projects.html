@@ -4,19 +4,7 @@
 #parse("menu.inc")
 
 <div id="contents">
-    #if($errors)
-    <fieldset>
-        <legend>Errors</legend>
-        $!errors
-    </fieldset>
-    #end
-
-    #if($RESULTS)
-    <fieldset>
-        <legend>Message</legend>
-        $!RESULTS
-    </fieldset>
-    #end
+    #parse("notifications.html")
 
     <h2>$tr.label("projects_mngm")</h2>
     <div id="table">

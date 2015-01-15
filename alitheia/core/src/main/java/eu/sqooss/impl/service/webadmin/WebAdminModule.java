@@ -24,12 +24,12 @@ public class WebAdminModule extends AbstractModule {
 		
 		install(new FactoryModuleBuilder().implement(HttpServlet.class,
 				AdminServlet.class).build(AdminServletFactory.class));
-		install(new FactoryModuleBuilder().implement(AbstractView.class,
+		install(new FactoryModuleBuilder().implement(Controller.class,
 				WebAdminRenderer.class).build(WebAdminRendererFactory.class));
-		install(new FactoryModuleBuilder().implement(AbstractView.class,
+		install(new FactoryModuleBuilder().implement(Controller.class,
 				PluginsView.class).build(PluginsViewFactory.class));
-		install(new FactoryModuleBuilder().implement(AbstractView.class,
-				ProjectsView.class).build(ProjectsViewFactory.class));
+		install(new FactoryModuleBuilder().implement(Controller.class,
+				ProjectsController.class).build(ProjectsControllerFactory.class));
 		install(new FactoryModuleBuilder().implement(Job.class,
 				ProjectDeleteJob.class).build(ProjectDeleteJobFactory.class));
 	}
@@ -76,8 +76,8 @@ interface PluginsViewFactory {
 	PluginsView create(BundleContext bc);
 }
 
-interface ProjectsViewFactory {
-	ProjectsView create(BundleContext bc);
+interface ProjectsControllerFactory {
+	ProjectsController create(BundleContext bc);
 }
 
 interface ProjectDeleteJobFactory {

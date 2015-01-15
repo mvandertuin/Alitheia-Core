@@ -1,0 +1,9 @@
+#parse("header.inc")
+<div id="main">
+#parse("menu.inc")
+  <div id="contents">
+    $!body
+    #parse($subtemplate)
+  </div>
+</div>
+#parse("sidebar.inc")

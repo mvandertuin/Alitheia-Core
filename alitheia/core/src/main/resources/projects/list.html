@@ -23,33 +23,38 @@
             <td class="trans">${project.Id}</td>
             <td class="trans">
                 #if(!$project.Selected)
-                <form method="get" action="/projects">
+                <form method="get" action="/projects" style="display: inline">
                 <button type="submit" name="projectId" class="install" style="width:100px" value="$project.Id">$tr.label("btn_info")</button>
                 </form>
                 #end
                 ${project.Name}
             </td>
-            <td class="trans">${project.LastVersion}</td>
+            <td class="trans">
+                #if($project.LastVersion)
+                    $project.LastVersion (<a title="${project.LastCommit}">$project.LastCommit.substring(0,8)</a>)
+                #else
+                    $tr.label("l0051")
+                #end
+            </td>
             <td class="trans">${project.LastMail}</td>
             <td class="trans">${project.LastBug}</td>
             <td class="trans">${project.EvalState}</td>
             <td class="trans">${project.NodeName}</td>
         </tr>
-            #foreach($metric in $metrics)
+            #if($project.Selected)
+            #foreach($metric in $projectMetrics)
                 #if($metric.Installed)
                     <tr><td colspan="7" class="noattr">
                         <form method="post" action="/projects_sync">
-                            <button type="submit" class="install" name="plugin" value="$m.Hashcode">Synchronise</button> $m.PluginName
+                            <input type="hidden" name="projectId" value="$project.Id" />
+                            <button type="submit" class="install" name="plugin" value="$metric.Hashcode">Synchronise</button> $metric.PluginName
                         </form>
                     </td></tr>
                 #end
+            #end
             #end
         #end
     #end
 
     #parse("projects/toolbar.html")
 </table>
-
-<!--<input type='hidden' id='$reqParAction' name='$reqParAction' value=''>-->
-<!--<input type='hidden' id='$reqParProjectId' name='$reqParProjectId' value='$selectedProject.getId()'>-->
-<!--<input type='hidden' id='$reqParSyncPlugin' name='$reqParSyncPlugin' value=''>-->

@@ -1,10 +1,7 @@
 package eu.sqooss.admin.test.actions;
 
-import com.google.inject.Inject;
 import eu.sqooss.core.AlitheiaCore;
 import eu.sqooss.impl.service.admin.AdminServiceImpl;
-import eu.sqooss.impl.service.tds.ProjectDataAccessorImpl;
-import eu.sqooss.impl.service.webadmin.ProjectsView;
 import eu.sqooss.service.admin.AdminAction;
 import eu.sqooss.service.admin.actions.AddProject;
 import eu.sqooss.service.db.DBService;
@@ -18,14 +15,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.verification.VerificationMode;
 
 import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;

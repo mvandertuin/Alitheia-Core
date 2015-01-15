@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ProjectViewModel {
 
-    public ProjectViewModel(boolean selected, long id, String name, String lastVersion, String lastMail, String lastBug, String evalState, String nodename, Collection<PluginInfo> metrics) {
+    public ProjectViewModel(boolean selected, long id, String name, String lastVersion, String lastCommit, String lastMail, String lastBug, String evalState, String nodename) {
         this.selected = selected;
         this.id = id;
         this.name = name;
@@ -17,7 +17,7 @@ public class ProjectViewModel {
         this.lastBug = lastBug;
         this.evalState = evalState;
         this.nodename = nodename;
-        this.metrics = metrics;
+        this.lastCommit = lastCommit;
     }
 
     public boolean getSelected() {
@@ -36,6 +36,10 @@ public class ProjectViewModel {
         return lastVersion;
     }
 
+    public String getLastCommit() {
+        return lastCommit;
+    }
+
     public String getLastMail() {
         return lastMail;
     }
@@ -52,18 +56,13 @@ public class ProjectViewModel {
         return nodename;
     }
 
-    public Collection<PluginInfo> getMetrics() {
-        return metrics;
-    }
-
     boolean selected = false;
     long id = 0;
     String name = "";
     String lastVersion = "";
+    String lastCommit = "";
     String lastMail = "";
     String lastBug = "";
     String evalState = "";
     String nodename = "(local)";
-
-    Collection<PluginInfo> metrics;
 }

@@ -4,12 +4,7 @@
     <legend>Add Project</legend>
     <form action="/projects_add" method="post">
     <table class="borderless">
-        #row_input("Project name",    "projectName",        $selectedProject.Name)
-        #row_input("Homepage",        "projectHomepage",    $selectedProject.WebsiteUrl)
-        #row_input("Contact e-mail",  "projectContact",     $selectedProject.ContactUrl)
-        #row_input("Bug database",    "projectBL",          $selectedProject.BtsUrl)
-        #row_input("Mailing list",    "projectML",          $selectedProject.MailUrl)
-        #row_input("Source code",     "projectSCM",         $selectedProject.ScmUrl)
+        #table($form)
         <tr>
             <td colspan="2" class="borderless">
                 <input type="submit" class="install" style="width:100px" value='$tr.label("project_add")'>

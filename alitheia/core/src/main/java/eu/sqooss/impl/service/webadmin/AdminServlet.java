@@ -33,9 +33,7 @@
 
 package eu.sqooss.impl.service.webadmin;
 
-import eu.sqooss.service.admin.AdminAction;
 import eu.sqooss.service.admin.AdminService;
-import eu.sqooss.service.admin.actions.AddProject;
 import eu.sqooss.service.db.DBService;
 import eu.sqooss.service.logging.Logger;
 import eu.sqooss.service.scheduler.Scheduler;
@@ -76,7 +74,7 @@ public class AdminServlet extends HttpServlet {
     private Scheduler scheduler;
 
     // Content tables
-    private List<AbstractView> controllerList = null;
+    private List<Controller> controllerList = null;
     private Hashtable<String, String> templateContent = null;
     private Hashtable<String, Pair<String, String>> staticContentMap = null;
 
@@ -89,7 +87,7 @@ public class AdminServlet extends HttpServlet {
     PluginsView pluginsView;
 
     // Projects view
-    ProjectsView projectsView;
+    ProjectsController projectsController;
 
     TranslationProxy tr = new TranslationProxy();
     
@@ -103,7 +101,7 @@ public class AdminServlet extends HttpServlet {
             Scheduler scheduler,
             WebAdminRendererFactory webAdminRendererFactory,
             PluginsViewFactory pluginsViewFactory,
-            ProjectsViewFactory projectsViewFactory) {
+            ProjectsControllerFactory projectsControllerFactory) {
         this.bc = bc;
         this.logger = logger;
         this.ve = ve;
@@ -131,9 +129,6 @@ public class AdminServlet extends HttpServlet {
 
         // Create the template content map
         templateContent = new Hashtable<>();
-        templateContent.put("/logs", "logs.html");
-        templateContent.put("/jobs", "jobs.html");
-        templateContent.put("/alljobs", "alljobs.html");
         templateContent.put("/users", "users.html");
         templateContent.put("/rules", "rules.html");
         templateContent.put("/jobstat", "jobstat.html");
@@ -142,9 +137,9 @@ public class AdminServlet extends HttpServlet {
         controllerList = new ArrayList<>();
         adminView = webAdminRendererFactory.create(bc);
         pluginsView = pluginsViewFactory.create(bc);
-        projectsView = projectsViewFactory.create(bc);
+        projectsController = projectsControllerFactory.create(bc);
         controllerList.add(adminView);
-        controllerList.add(projectsView);
+        controllerList.add(projectsController);
         controllerList.add(pluginsView);
     }
 
@@ -228,7 +223,7 @@ public class AdminServlet extends HttpServlet {
         VelocityContext vc = new VelocityContext();
 
         String query = req.getPathInfo();
-        for(AbstractView view : controllerList){
+        for(Controller view : controllerList){
             for(Method m : view.getClass().getMethods()){
                 Action a = m.getAnnotation(Action.class);
                 if(a != null && query.equals(a.uri()) && a.method().equals(req.getMethod())){
@@ -249,8 +244,7 @@ public class AdminServlet extends HttpServlet {
         } 
         
         try {
-            String query = request.getPathInfo();
-            logger.debug("POST:" + query);
+            logger.debug("POST:" + request.getPathInfo());
 
             if(handleWithController(request, response)){
                 // already handled
@@ -324,10 +318,10 @@ public class AdminServlet extends HttpServlet {
 
     private void createSubstitutions(HttpServletRequest request, VelocityContext vc) {
         // Initialize the resource bundles with the provided locale
-        AbstractView.initResources(Locale.ENGLISH);
+        Controller.initResources(Locale.ENGLISH);
 
         // Simple string substitutions
-        vc.put("APP_NAME", AbstractView.getLbl("app_name"));
+        vc.put("APP_NAME", Controller.getLbl("app_name"));
         vc.put("COPYRIGHT",
                 "Copyright 2007-2008"
                 + "<a href=\"http://www.sqo-oss.eu/about/\">"
@@ -340,37 +334,11 @@ public class AdminServlet extends HttpServlet {
         vc.put("scheduler", scheduler.getSchedulerStats());
         vc.put("tr",tr); // translations proxy
         vc.put("admin",adminView);
-        vc.put("projects",projectsView);
+        vc.put("projects", projectsController);
         vc.put("metrics",pluginsView);
         vc.put("request", request); // The request can be used by the render() methods
     }
-    
-    /**
-     * This is a class whose sole purpose is to provide a useful API from
-     * within Velocity templates for the translation functions offered by
-     * the AbstractView. Only one object needs to be created, and it
-     * forwards all the label(), message() and error() calls to the translation
-     * methods of the view.
-     */
-    public class TranslationProxy {
-        public TranslationProxy() { 
-        }
-        
-        /** Translate a label */
-        public String label(String s) {
-            return AbstractView.getLbl(s);
-        }
-        
-        /** Translate a (multi-line, html formatted) message */
-        public String message(String s) {
-            return AbstractView.getMsg(s);
-        }
-        
-        /** Translate an error message */
-        public String error(String s) {
-            return AbstractView.getErr(s);
-        }
-    }
+
 }
 
 // vi: ai nosi sw=4 ts=4 expandtab

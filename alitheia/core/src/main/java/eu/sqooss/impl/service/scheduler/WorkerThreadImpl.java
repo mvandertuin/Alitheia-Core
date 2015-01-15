@@ -91,6 +91,7 @@ class WorkerThreadImpl extends Thread implements WorkerThread {
             LogManager logManager, WorkerThreadFactory workerThreadFactory) {
         super(null, null, "OneShot Worker Thread");
         m_scheduler = s;
+        m_oneshot = oneshot;
         this.logManager = logManager;
         this.workerThreadFactory = workerThreadFactory;
     }

@@ -1,49 +1,34 @@
 package eu.sqooss.impl.service.webadmin;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.core.AlitheiaCoreService;
-import eu.sqooss.impl.service.webadmin.ProjectsView;
 import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
-import eu.sqooss.service.admin.AdminAction;
-import eu.sqooss.service.admin.AdminService;
-import eu.sqooss.service.cluster.ClusterNodeService;
 import eu.sqooss.service.db.*;
-import eu.sqooss.service.logging.LogManager;
 import eu.sqooss.service.pa.PluginAdmin;
 import eu.sqooss.service.pa.PluginInfo;
-import eu.sqooss.service.scheduler.Scheduler;
-import eu.sqooss.service.updater.Updater;
-import eu.sqooss.service.updater.UpdaterService;
-import junit.framework.ComparisonFailure;
 
 import org.apache.velocity.VelocityContext;
 //import org.hamcrest.text.IsEqualIgnoringWhiteSpace;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.ServiceReference;
 import org.springframework.mock.web.MockHttpServletRequest;
-
-import javax.mail.Store;
 
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyMap;
-import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.*;
 
 /**
  * A test verifying that the HTML output is unchanged before and after the refactor.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class PluginsViewTest {
+public class PluginsViewTest extends HTMLTest {
     static long failid;
     static long successid;
 
@@ -381,16 +366,6 @@ public class PluginsViewTest {
             
         	String result = pluginsView.render(request);
         	assertWhiteSpaceEqual(renderPluginAttribute,result);
-    }
-    
-    private static void assertWhiteSpaceEqual(String expected, String actual){
-        if(!reduceWhitespace(expected).equalsIgnoreCase(reduceWhitespace(actual)))
-            throw new ComparisonFailure("", reduceWhitespace(expected), reduceWhitespace(actual));
-    }
-
-    private static String reduceWhitespace(String in){
-        String s = in.replaceAll("\\s+", "").replaceAll(">\\s", ">").replaceAll(">\\s<", "><").replaceAll("(\\s$|^\\s)", "");
-        return s;//o;
     }
 
     private static final String noPlugins = "<fieldset>\n"
