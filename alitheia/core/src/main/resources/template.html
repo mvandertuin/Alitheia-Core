@@ -1,9 +1,9 @@
-#set($section=4)
 #parse("header.inc")
 <div id="main">
 #parse("menu.inc")
   <div id="contents">
-    #parse($content)
+    $!body
+    #parse($subtemplate)
   </div>
 </div>
 #parse("sidebar.inc")
