@@ -21,11 +21,12 @@
     #end
 </td></tr>
 
-#if($selectedProject)
 <tr class='subhead'><td>Update</td><td colspan='6'>
         <!-- Updater scope -->
 <form method="post" action="/projects_update">
-        <select name="updater">
+#if($selectedProject)
+    <input type="hidden" name="projectId" value="$selectedProject.Id">
+    <select name="updater">
             <optgroup label="Import Stage">
                 #foreach($updater in $updatersImport)
                 <option value="$updater.mnem()">$updater.descr()</option>
@@ -47,12 +48,14 @@
                 #end
             </optgroup>
         </select>
+#end
 <div style="float:right">
         <!-- Updater trigger -->
+#if($selectedProject)
         <button type="submit" class="install" name="scope" value="single">Run Updater</button>
         <button type="submit" class="install" name="scope" value="all">Run All Updaters</button>
+#end
         <button type="submit" class="install" name="scope" value="host">Run all on $hostname</button>
 </div>
 </form>
 </td></tr>
-#end

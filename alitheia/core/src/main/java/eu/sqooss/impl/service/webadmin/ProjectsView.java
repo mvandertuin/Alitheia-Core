@@ -93,7 +93,6 @@ public class ProjectsView extends AbstractView {
     /**
      * Instantiates a new projects view.
      *
-     * @param vc the <code>VelocityContext</code> object
      * @param bundlecontext the <code>BundleContext</code> object
      */
     public ProjectsView(BundleContext bundlecontext) {
@@ -124,17 +123,27 @@ public class ProjectsView extends AbstractView {
         for (StoredProject nextPrj : projects) {
             if(nextPrj == null) break;
 
-            ProjectVersion v = ProjectVersion.getLastProjectVersion(nextPrj);
-            MailMessage mm = MailMessage.getLatestMailMessage(nextPrj);
-            Bug bug = Bug.getLastUpdate(nextPrj);
+            ProjectVersion v = null;
+            MailMessage mm = null;
+            Bug bug = null;
+            String error = null;
+            try {
+                v = ProjectVersion.getLastProjectVersion(nextPrj);
+                mm = MailMessage.getLatestMailMessage(nextPrj);
+                bug = Bug.getLastUpdate(nextPrj);
+            } catch (Exception e){
+                error = e.getMessage();
+            }
+
+            error = (error == null ? getLbl("l0051") : error);
 
             projs.add(new ProjectViewModel(
                     selProject != null && selProject.getId() == nextPrj.getId(),
                     nextPrj.getId(),
                     nextPrj.getName(),
-                    v == null ? getLbl("l0051") : String.valueOf(v.getSequence()) + "(" + v.getRevisionId() + ")",
-                    mm == null ? getLbl("l0051") : mm.getSendDate() + "",
-                    bug == null ? getLbl("l0051") : bug.getBugID(),
+                    v == null ? error : String.valueOf(v.getSequence()) + "(" + v.getRevisionId() + ")",
+                    mm == null ? error : mm.getSendDate() + "",
+                    bug == null ? error : bug.getBugID(),
                     nextPrj.isEvaluated() ? getLbl("project_is_evaluated") : getLbl("project_not_evaluated"),
                     nextPrj.getClusternode() != null ? nextPrj.getClusternode().getName() : "(local)",
                     metrics
@@ -143,10 +152,14 @@ public class ProjectsView extends AbstractView {
 
         // Prepare list of updaters
         if(selProject != null) {
-            vc.put("updatersImport", updater.getUpdaters(selProject, UpdaterStage.IMPORT));
-            vc.put("updatersParse", updater.getUpdaters(selProject, UpdaterStage.PARSE));
-            vc.put("updatersInference", updater.getUpdaters(selProject, UpdaterStage.INFERENCE));
-            vc.put("updatersDefault", updater.getUpdaters(selProject, UpdaterStage.DEFAULT));
+            try {
+                vc.put("updatersImport", updater.getUpdaters(selProject, UpdaterStage.IMPORT));
+                vc.put("updatersParse", updater.getUpdaters(selProject, UpdaterStage.PARSE));
+                vc.put("updatersInference", updater.getUpdaters(selProject, UpdaterStage.INFERENCE));
+                vc.put("updatersDefault", updater.getUpdaters(selProject, UpdaterStage.DEFAULT));
+            } catch (NullPointerException e){
+                vc.put("RESULTS", e.getMessage() + "<br>" + e.getStackTrace()[0]);
+            }
         }
 
         vc.put("hostname", clusterNode.getClusterNodeName());
@@ -178,11 +191,10 @@ public class ProjectsView extends AbstractView {
     public void addPost(HttpServletRequest req, VelocityContext vc)
     {
         StringBuilder e = new StringBuilder();
-        StoredProject proj = addProject(e, req, 0);
+        StoredProject proj = addProject(vc, req);
 
         if(proj == null){
             vc.put("subtemplate", "errormessage.html");
-            vc.put("RESULTS", e);
         } else {
             vc.put("subtemplate", "projects/edit.html");
             general(req, vc, proj);
@@ -219,10 +231,8 @@ public class ProjectsView extends AbstractView {
 
         StoredProject selProject = selectedProject(req);
         StringBuilder e = new StringBuilder();
-//        selProject = removeProject(e, selProject, 0);
-//        if(selProject == null){
-//            // OK
-//        }
+        selProject = removeProject(vc, selProject, 0);
+        vc.put("selectedProject", selProject);
 
         System.out.println("[POST] DELETE");
     }
@@ -231,13 +241,30 @@ public class ProjectsView extends AbstractView {
     public void update(HttpServletRequest req, VelocityContext vc){
         vc.put("subtemplate", "projects/list.html");
         String scope = req.getParameter("scope");
-        System.out.println("[POST] UPDATE "+scope);
+        StoredProject selProject = selectedProject(req);
+
+        if(selProject == null){
+            vc.put("errors", "First select a project before selecting an updater.");
+            return;
+        } else if(scope.equals("single")){
+            triggerUpdate(vc, selProject, req.getParameter("updater"));
+        } else if(scope.equals("all")) {
+            triggerAllUpdate(vc, selProject);
+        } else if(scope.equals("host")){
+            triggerAllUpdateNode(vc, selProject);
+        }
+
+        general(req, vc, selProject);
     }
 
     @Action(uri = "/projects_sync", template = "projects.html", method = "POST")
     public void sync(HttpServletRequest req, VelocityContext vc){
         vc.put("subtemplate", "projects/list.html");
-        System.out.println("[POST] SYNC");
+        StoredProject selProject = selectedProject(req);
+        String reqValSyncPlugin = req.getParameter("plugin");
+        syncPlugin(vc, selProject, reqValSyncPlugin);
+
+        general(req, vc, selProject);
     }
 
     /**
@@ -247,89 +274,32 @@ public class ProjectsView extends AbstractView {
      *
      * @return The HTML presentation of the generated view.
      */
-    public static String render(HttpServletRequest req) {
-        // Stores the assembled HTML content
-        StringBuilder b = new StringBuilder("\n");
-        // Stores the accumulated error messages
-        StringBuilder e = new StringBuilder();
-        // Indentation spacer
-        int in = 6;
-
-        // Initialize the resource bundles with the request's locale
-        initResources(req.getLocale());
-
-        // Request values
-        String reqValAction        = "";
-        Long   reqValProjectId     = null;
-
-        // Selected project
-        StoredProject selProject = null;
-
-        // ===============================================================
-        // Parse the servlet's request object
-        // ===============================================================
-        if (req != null) {
-            // DEBUG: Dump the servlet's request parameter
-            if (DEBUG) {
-                b.append(debugRequest(req));
-            }
-
-            // Retrieve the selected editor's action (if any)
-            reqValAction = req.getParameter(REQ_PAR_ACTION);
-            
-            // Retrieve the selected project's DAO (if any)
-            reqValProjectId = fromString(req.getParameter(REQ_PAR_PROJECT_ID));
-            if (reqValProjectId != null) {
-                selProject = sobjDB.findObjectById(
-                        StoredProject.class, reqValProjectId);
-            }
-            
-            if (reqValAction == null) {
-                reqValAction = "";
-            } else if (reqValAction.equals(ACT_CON_ADD_PROJECT)) {
-            	selProject = addProject(e, req, in);
-            } else if (reqValAction.equals(ACT_CON_REM_PROJECT)) {
-            	selProject = removeProject(e, selProject, in);
-            } else if (reqValAction.equals(ACT_CON_UPD)) {
-            	triggerUpdate(e, selProject, in, req.getParameter(REQ_PAR_UPD));
-            } else if (reqValAction.equals(ACT_CON_UPD_ALL)) {
-            	triggerAllUpdate(e, selProject, in);
-            } else if (reqValAction.equals(ACT_CON_UPD_ALL_NODE)) {
-            	triggerAllUpdateNode(e, selProject, in);
-            } else {
-            	// Retrieve the selected plug-in's hash-code
-        		String reqValSyncPlugin = req.getParameter(REQ_PAR_SYNC_PLUGIN);
-        		syncPlugin(e, selProject, reqValSyncPlugin);
-            }
-        }
-        createFrom(b, e, selProject, reqValAction , in);
-        return b.toString();
+    public String render(HttpServletRequest req) {
+        return "";
     }
   
-    private static StoredProject addProject(StringBuilder e, HttpServletRequest r, int indent) {
-        AdminService as = AlitheiaCore.getInstance().getAdminService();
-    	AdminAction aa = as.create(AddProject.MNEMONIC);
+    private StoredProject addProject(VelocityContext vc, HttpServletRequest r) {
+    	AdminAction aa = admin.create(AddProject.MNEMONIC);
     	aa.addArg("scm", r.getParameter(REQ_PAR_PRJ_CODE));
     	aa.addArg("name", r.getParameter(REQ_PAR_PRJ_NAME));
     	aa.addArg("bts", r.getParameter(REQ_PAR_PRJ_BUG));
     	aa.addArg("mail", r.getParameter(REQ_PAR_PRJ_MAIL));
     	aa.addArg("web", r.getParameter(REQ_PAR_PRJ_WEB));
-    	as.execute(aa);
-    	
-//    	if (aa.hasErrors()) {
-//            vc.put("RESULTS", aa.errors());
-//            return null;
-//    	} else {
-//            vc.put("RESULTS", aa.results());
+		admin.execute(aa);
+
+    	if (aa.hasErrors()) {
+            vc.put("RESULTS", aa.errors());
+            return null;
+    	} else {
+            vc.put("RESULTS", aa.results());
             return StoredProject.getProjectByName(r.getParameter(REQ_PAR_PRJ_NAME));
-//    	}
+    	}
     }
     
     // ---------------------------------------------------------------
     // Remove project
     // ---------------------------------------------------------------
-    private static StoredProject removeProject(StringBuilder e, 
-    		StoredProject selProject, int indent) {
+    private StoredProject removeProject(VelocityContext vc, StoredProject selProject, int indent) {
     	if (selProject != null) {
 			// Deleting large projects in the foreground is
 			// very slow
@@ -337,11 +307,11 @@ public class ProjectsView extends AbstractView {
 			try {
 				sobjSched.enqueue(pdj);
 			} catch (SchedulerException e1) {
-				e.append(sp(indent)).append(getErr("e0034")).append("<br/>\n");
+                vc.put("RESULTS", getErr("e0034"));
 			}
 			selProject = null;
-		} else {
-			e.append(sp(indent) + getErr("e0034") + "<br/>\n");
+        } else {
+            vc.put("RESULTS", getErr("e0034"));
 		}
     	return selProject;
     }
@@ -349,54 +319,49 @@ public class ProjectsView extends AbstractView {
 	// ---------------------------------------------------------------
 	// Trigger an update
 	// ---------------------------------------------------------------
-	private static void triggerUpdate(StringBuilder e,
-			StoredProject selProject, int indent, String mnem) {
-		AdminService as = AlitheiaCore.getInstance().getAdminService();
-		AdminAction aa = as.create(UpdateProject.MNEMONIC);
+	private void triggerUpdate(VelocityContext vc, StoredProject selProject, String mnem) {
+		AdminAction aa = admin.create(UpdateProject.MNEMONIC);
 		aa.addArg("project", selProject.getId());
 		aa.addArg("updater", mnem);
-		as.execute(aa);
+		admin.execute(aa);
 
-//		if (aa.hasErrors()) {
-//            vc.put("RESULTS", aa.errors());
-//        } else {
-//            vc.put("RESULTS", aa.results());
-//        }
+		if (aa.hasErrors()) {
+            vc.put("RESULTS", aa.errors());
+        } else {
+            vc.put("RESULTS", aa.results());
+        }
 	}
 
 	// ---------------------------------------------------------------
 	// Trigger update on all resources for that project
 	// ---------------------------------------------------------------
-	private static void triggerAllUpdate(StringBuilder e,
-			StoredProject selProject, int indent) {
-	    AdminService as = AlitheiaCore.getInstance().getAdminService();
-        AdminAction aa = as.create(UpdateProject.MNEMONIC);
+	private void triggerAllUpdate(VelocityContext vc, StoredProject selProject) {
+        AdminAction aa = admin.create(UpdateProject.MNEMONIC);
         aa.addArg("project", selProject.getId());
-        as.execute(aa);
+        admin.execute(aa);
 
-//        if (aa.hasErrors()) {
-//            vc.put("RESULTS", aa.errors());
-//        } else {
-//            vc.put("RESULTS", aa.results());
-//        }
+        if (aa.hasErrors()) {
+            vc.put("RESULTS", aa.errors());
+        } else {
+            vc.put("RESULTS", aa.results());
+        }
 	}
 	
 	// ---------------------------------------------------------------
 	// Trigger update on all resources on all projects of a node
 	// ---------------------------------------------------------------
-    private static void triggerAllUpdateNode(StringBuilder e,
-			StoredProject selProject, int in) {
+    private void triggerAllUpdateNode(VelocityContext vc, StoredProject selProject) {
 		Set<StoredProject> projectList = ClusterNode.thisNode().getProjects();
 		
 		for (StoredProject project : projectList) {
-			triggerAllUpdate(e, project, in);
+			triggerAllUpdate(vc, project);
 		}
 	}
 	
 	// ---------------------------------------------------------------
 	// Trigger synchronize on the selected plug-in for that project
 	// ---------------------------------------------------------------
-    private static void syncPlugin(StringBuilder e, StoredProject selProject, String reqValSyncPlugin) {
+    private void syncPlugin(VelocityContext vc, StoredProject selProject, String reqValSyncPlugin) {
 		if ((reqValSyncPlugin != null) && (selProject != null)) {
 			PluginInfo pInfo = sobjPA.getPluginInfo(reqValSyncPlugin);
 			if (pInfo != null) {
@@ -409,114 +374,7 @@ public class ProjectsView extends AbstractView {
 			}
 		}
     }
-    
-    private static void createFrom(StringBuilder b, StringBuilder e, 
-    		StoredProject selProject, String reqValAction, int in) {
 
-        // ===============================================================
-        // Create the form
-        // ===============================================================
-        b.append(sp(in) + "<form id=\"projects\""
-                + " name=\"projects\""
-                + " method=\"post\""
-                + " action=\"/projects\">\n");
-
-        // ===============================================================
-        // Display the accumulated error messages (if any)
-        // ===============================================================
-        b.append(errorFieldset(e, ++in));
-
-        // Get the complete list of projects stored in the SQO-OSS framework
-        Set<StoredProject> projects = ClusterNode.thisNode().getProjects();
-        Collection<PluginInfo> metrics = sobjPA.listPlugins();
-
-        // ===============================================================
-        // INPUT FIELDS
-        // ===============================================================
-        addHiddenFields(selProject,b,in);
-
-        // ===============================================================
-        // Close the form
-        // ===============================================================
-        b.append(sp(--in) + "</form>\n");
-    }
-
-
-    private static void addHiddenFields(StoredProject selProject,
-            StringBuilder b,
-            long in) {
-        // "Action type" input field
-        b.append(sp(in) + "<input type='hidden' id='" + REQ_PAR_ACTION + 
-                "' name='" + REQ_PAR_ACTION + "' value=''>\n");
-        // "Project Id" input field
-        b.append(sp(in) + "<input type='hidden' id='" + REQ_PAR_PROJECT_ID +
-                "' name='" + REQ_PAR_PROJECT_ID +
-                "' value='" + ((selProject != null) ? selProject.getId() : "") +
-                "'>\n");
-        // "Plug-in hashcode" input field
-        b.append(sp(in) + "<input type='hidden' id='" + REQ_PAR_SYNC_PLUGIN +
-                "' name='" + REQ_PAR_SYNC_PLUGIN + 
-                "' value=''>\n");
-    }
-    
-    private static void showLastAppliedVersion(
-            StoredProject project,
-            Collection<PluginInfo> metrics,
-            StringBuilder b) {
-        for(PluginInfo m : metrics) {
-            if (m.installed) {
-                b.append("<tr>\n");
-                b.append(sp(1) + "<td colspan=\"7\""
-                        + " class=\"noattr\">\n"
-                        + "<input type=\"button\""
-                        + " class=\"install\""
-                        + " style=\"width: 100px;\""
-                        + " value=\"Synchronise\""
-                        + " onclick=\"javascript:"
-                        + "document.getElementById('"
-                        + REQ_PAR_SYNC_PLUGIN + "').value='"
-                        + m.getHashcode() + "';"
-                        + SUBMIT + "\""
-                        + ">"
-                        + "&nbsp;"
-                        + m.getPluginName()
-                        + "</td>\n");
-                b.append("</tr>\n");
-            }
-        }
-    }
-
-    private static void addHeaderRow(StringBuilder b, long in) {
-        //----------------------------------------------------------------
-        // Create the header row
-        //----------------------------------------------------------------
-        b.append(sp(in++) + "<table>\n");
-        b.append(sp(in++) + "<thead>\n");
-        b.append(sp(in++) + "<tr class=\"head\">\n");
-        b.append(sp(in) + "<td class='head'  style='width: 10%;'>"
-                + getLbl("l0066")
-                + "</td>\n");
-        b.append(sp(in) + "<td class='head' style='width: 35%;'>"
-                + getLbl("l0067")
-                + "</td>\n");
-        b.append(sp(in) + "<td class='head' style='width: 15%;'>"
-                + getLbl("l0068")
-                + "</td>\n");
-        b.append(sp(in) + "<td class='head' style='width: 15%;'>"
-                + getLbl("l0069")
-                + "</td>\n");
-        b.append(sp(in) + "<td class='head' style='width: 15%;'>"
-                + getLbl("l0070")
-                + "</td>\n");
-        b.append(sp(in) + "<td class='head' style='width: 10%;'>"
-                + getLbl("l0071")
-                + "</td>\n");
-        b.append(sp(in) + "<td class='head' style='width: 10%;'>"
-                + getLbl("l0073")
-                + "</td>\n");
-        b.append(sp(--in) + "</tr>\n");
-        b.append(sp(--in) + "</thead>\n");
-    }
 }
 
 // vi: ai nosi sw=4 ts=4 expandtab

@@ -1,8 +1,3 @@
-<fieldset>
-    <legend>Errors</legend>
-    $errors
-</fieldset>
-
 <table>
     <thead>
     <tr class="head">
@@ -40,6 +35,15 @@
             <td class="trans">${project.EvalState}</td>
             <td class="trans">${project.NodeName}</td>
         </tr>
+            #foreach($metric in $metrics)
+                #if($metric.Installed)
+                    <tr><td colspan="7" class="noattr">
+                        <form method="post" action="/projects_sync">
+                            <button type="submit" class="install" name="plugin" value="$m.Hashcode">Synchronise</button> $m.PluginName
+                        </form>
+                    </td></tr>
+                #end
+            #end
         #end
     #end
 
