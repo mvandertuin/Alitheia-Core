@@ -38,11 +38,17 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
@@ -536,6 +542,38 @@ public abstract class AbstractView {
      */
     protected static boolean checkTDSUrl (String url) {
         return sobjTDS.isURLSupported(url);
+    }
+
+    /**
+     * ViewModels for in Velocity templates
+     */
+    public class Table {
+        public Row[] rows;
+
+        public Table(Row... rows){
+            this.rows = rows;
+        }
+    }
+
+    public abstract class Row {
+        public String title;
+    }
+
+    public class InputRow extends Row {
+        public String name;
+        public String value;
+
+        public InputRow(String name, String value){
+            this.name = name;
+            this.value = value;
+        }
+    }
+
+    public class InfoRow extends Row {
+        public String value;
+        public InfoRow(String value){
+            this.value = value;
+        }
     }
 }
 
