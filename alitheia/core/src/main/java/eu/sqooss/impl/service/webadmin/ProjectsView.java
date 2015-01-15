@@ -38,6 +38,7 @@ import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 
 import eu.sqooss.service.cluster.ClusterNodeService;
+import eu.sqooss.service.metricactivator.MetricActivator;
 import eu.sqooss.service.pa.PluginAdmin;
 import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
@@ -89,6 +90,7 @@ public class ProjectsView extends AbstractView {
     static UpdaterService updater;
     static ClusterNodeService clusterNode;
     static AdminService admin;
+    private MetricActivator ma;
 
     /**
      * Instantiates a new projects view.
@@ -101,6 +103,7 @@ public class ProjectsView extends AbstractView {
         updater = AlitheiaCore.getInstance().getUpdater();
         clusterNode = AlitheiaCore.getInstance().getClusterNodeService();
         admin = AlitheiaCore.getInstance().getAdminService();
+        ma = AlitheiaCore.getInstance().getMetricActivator();
     }
 
     private StoredProject selectedProject(HttpServletRequest req){
@@ -159,7 +162,7 @@ public class ProjectsView extends AbstractView {
                 vc.put("updatersInference", updater.getUpdaters(selProject, UpdaterStage.INFERENCE));
                 vc.put("updatersDefault", updater.getUpdaters(selProject, UpdaterStage.DEFAULT));
             } catch (NullPointerException e){
-                vc.put("RESULTS", e.getMessage() + "<br>" + e.getStackTrace()[0]);
+                error(vc, e.getMessage() + "<br>" + e.getStackTrace()[0]);
             }
         }
 
@@ -209,13 +212,15 @@ public class ProjectsView extends AbstractView {
         aa.addArg("dir", req.getParameter("properties"));
         admin.execute(aa);
 
+        vc.put("subtemplate", "projects/edit.html");
+
         if(aa.hasErrors()){
-            vc.put("subtemplate", "errormessage.html");
-            vc.put("RESULTS", aa.hasErrors());
+            error(vc, aa.errors());
         } else {
-            vc.put("subtemplate", "projects/edit.html");
-            general(req, vc, StoredProject.getProjectByName(req.getParameter(REQ_PAR_PRJ_NAME)));
+            result(vc, "Added project " + req.getParameter(REQ_PAR_PRJ_NAME));
         }
+
+        general(req, vc, StoredProject.getProjectByName(req.getParameter(REQ_PAR_PRJ_NAME)));
     }
 
     @Action(uri = "/projects_delete", template = "projects.html", method = "GET")
@@ -234,8 +239,6 @@ public class ProjectsView extends AbstractView {
         StringBuilder e = new StringBuilder();
         selProject = removeProject(vc, selProject, 0);
         vc.put("selectedProject", selProject);
-
-        System.out.println("[POST] DELETE");
     }
 
     @Action(uri = "/projects_update", template = "projects.html", method = "POST")
@@ -245,7 +248,7 @@ public class ProjectsView extends AbstractView {
         StoredProject selProject = selectedProject(req);
 
         if(selProject == null){
-            vc.put("errors", "First select a project before selecting an updater.");
+            error(vc, "First select a project before selecting an updater.");
             return;
         } else if(scope.equals("single")){
             triggerUpdate(vc, selProject, req.getParameter("updater"));
@@ -289,10 +292,10 @@ public class ProjectsView extends AbstractView {
 		admin.execute(aa);
 
     	if (aa.hasErrors()) {
-            vc.put("RESULTS", aa.errors());
+            error(vc, aa.errors());
             return null;
     	} else {
-            vc.put("RESULTS", aa.results());
+            result(vc, aa.results());
             return StoredProject.getProjectByName(r.getParameter(REQ_PAR_PRJ_NAME));
     	}
     }
@@ -308,11 +311,11 @@ public class ProjectsView extends AbstractView {
 			try {
 				sobjSched.enqueue(pdj);
 			} catch (SchedulerException e1) {
-                vc.put("RESULTS", getErr("e0034"));
+                error(vc, getErr("e0034"));
 			}
 			selProject = null;
         } else {
-            vc.put("RESULTS", getErr("e0034"));
+            error(vc, getErr("e0034"));
 		}
     	return selProject;
     }
@@ -327,9 +330,9 @@ public class ProjectsView extends AbstractView {
 		admin.execute(aa);
 
 		if (aa.hasErrors()) {
-            vc.put("RESULTS", aa.errors());
+            error(vc, aa.errors());
         } else {
-            vc.put("RESULTS", aa.results());
+            result(vc, aa.results());
         }
 	}
 
@@ -342,9 +345,9 @@ public class ProjectsView extends AbstractView {
         admin.execute(aa);
 
         if (aa.hasErrors()) {
-            vc.put("RESULTS", aa.errors());
+            error(vc, aa.errors());
         } else {
-            vc.put("RESULTS", aa.results());
+            result(vc, aa.results());
         }
 	}
 	
@@ -363,17 +366,27 @@ public class ProjectsView extends AbstractView {
 	// Trigger synchronize on the selected plug-in for that project
 	// ---------------------------------------------------------------
     private void syncPlugin(VelocityContext vc, StoredProject selProject, String reqValSyncPlugin) {
+        boolean done = false;
+
 		if ((reqValSyncPlugin != null) && (selProject != null)) {
 			PluginInfo pInfo = sobjPA.getPluginInfo(reqValSyncPlugin);
 			if (pInfo != null) {
 				AlitheiaPlugin pObj = sobjPA.getPlugin(pInfo);
 				if (pObj != null) {
-					compMA.syncMetric(pObj, selProject);
-					sobjLogger.debug("Syncronise plugin (" + pObj.getName()
+					ma.syncMetric(pObj, selProject);
+					sobjLogger.debug("Synchronise plugin (" + pObj.getName()
 							+ ") on project (" + selProject.getName() + ").");
+
+                    done = true;
 				}
 			}
 		}
+
+        if (done) {
+            error(vc, "Could not synchronise plugin");
+        } else {
+            result(vc, "Synchronised plugin");
+        }
     }
 
 }
