@@ -5,6 +5,7 @@
         <div id="contents">
           <h2>$tr.label("projects_mngm")</h2>
           <div id="table">
+            #parse($subtemplate)
             $projects.render($request)
           </div>
           <h2>$tr.label("install_new_project")</h2>

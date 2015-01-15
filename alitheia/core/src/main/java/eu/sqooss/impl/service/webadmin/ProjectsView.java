@@ -40,6 +40,7 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.http.protocol.HTTP;
 import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 
@@ -93,6 +94,11 @@ public class ProjectsView extends AbstractView {
      */
     public ProjectsView(BundleContext bundlecontext, VelocityContext vc) {
         super(bundlecontext, vc);
+    }
+
+    @Action(uri = "/projects", template = "projects.html")
+    public void list(HttpServletRequest req, VelocityContext vc){
+        vc.put("subtemplate", "projects/list.html");
     }
 
     /**
