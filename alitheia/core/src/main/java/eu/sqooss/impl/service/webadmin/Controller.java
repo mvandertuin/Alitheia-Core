@@ -48,6 +48,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
 import eu.sqooss.core.AlitheiaCore;
 import eu.sqooss.service.cluster.ClusterNodeService;
@@ -603,7 +604,7 @@ public abstract class Controller {
         public InputRow(String title, String name, String value){
             this.title = title;
             this.name = name;
-            this.value = value;
+            this.value = escapeHtml(value);
         }
     }
 
