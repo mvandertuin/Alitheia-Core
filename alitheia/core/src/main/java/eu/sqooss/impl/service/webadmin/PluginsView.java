@@ -54,7 +54,7 @@ import eu.sqooss.service.util.StringUtils;
 public class PluginsView extends AbstractView{
 
     public PluginsView(BundleContext bundlecontext, VelocityContext vc) {
-        super(bundlecontext, vc);
+        super(bundlecontext);
     }
 
     /**

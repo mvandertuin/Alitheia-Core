@@ -1,0 +1,22 @@
+#parse("macros.html")
+
+<fieldset>
+    <legend>Project information</legend>
+    <table class="borderless">
+        #row_info("Project name", $selectedProject.Name)
+        #row_info("Homepage", $selectedProject.WebsiteUrl)
+        #row_info("Contact e-mail", $selectedProject.ContactUrl)
+        #row_info("Bug database", $selectedProject.BtsUrl)
+        #row_info("Mailing list", $selectedProject.MailUrl)
+        #row_info("Source code", $selectedProject.ScmUrl)
+        <tr>
+            <td colspan="2" class="borderless">
+                <form style="display: inline" action="/projects">
+                    <input type="submit" class="install" style="width:100px" value='$tr.label("btn_back")'>
+                </form>
+            </td>
+        </tr>
+    </table>
+</fieldset>
+
+#parse("projects/list.html")

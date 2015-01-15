@@ -3,7 +3,7 @@
     <td class="borderless" style="width: 100px;">
         <b>$title</b>
     </td>
-    <td class="borderless">$value</td>
+    <td class="borderless">$!value</td>
 </tr>
 #end
 
@@ -13,16 +13,16 @@
         <b>$title</b>
     </td>
     <td class="borderless">
-        <input type="text" class="form" id="$name" name="$name" value="$value" size="60">
+        <input type="text" class="form" id="$name" name="$name" value="$!value" size="60">
     </td>
 </tr>
 #end
 
 #macro( table $table )
     #foreach($row in $table)
-        #if ($row <isoftype> InfoRow)
+        #if ($row.class.simpleName.equals("InfoRow"))
             #row_info($row.title, $row.value)
-        #else ($row <isoftype> InputRow)
+        #else ($row.class.simpleName.equals("InputRow"))
             #row_input($row.title, $row.name, $row.value)
         #end
     #end

@@ -44,11 +44,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
@@ -82,8 +78,6 @@ public abstract class AbstractView {
     protected static ClusterNodeService sobjClusterNode = null;
     protected static SecurityManager sobjSecurity = null;
 
-    // Velocity stuff
-    protected static VelocityContext vc = null;
     protected BundleContext bc = null;
 
     // Names of the various resource files
@@ -106,11 +100,9 @@ public abstract class AbstractView {
      * Instantiates a new <code>AbstractView</code> object.
      * 
      * @param bundlecontext the parent bundle's context
-     * @param vc the Velocity instance's context
      */
-    public AbstractView(BundleContext bundlecontext, VelocityContext vc) {
+    public AbstractView(BundleContext bundlecontext) {
         // Keep the Velocity context instance
-        this.vc = vc;
         this.bc = bundlecontext;
        
         sobjCore = AlitheiaCore.getInstance();
@@ -556,12 +548,24 @@ public abstract class AbstractView {
     }
 
     public abstract class Row {
+        public String getTitle() {
+            return title;
+        }
+
         public String title;
     }
 
     public class InputRow extends Row {
         public String name;
         public String value;
+
+        public String getName() {
+            return name;
+        }
+
+        public String getValue() {
+            return value;
+        }
 
         public InputRow(String name, String value){
             this.name = name;
@@ -570,6 +574,10 @@ public abstract class AbstractView {
     }
 
     public class InfoRow extends Row {
+        public String getValue() {
+            return value;
+        }
+
         public String value;
         public InfoRow(String value){
             this.value = value;

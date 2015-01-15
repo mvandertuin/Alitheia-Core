@@ -79,8 +79,6 @@ public class AdminServlet extends HttpServlet {
     private List<AbstractView> controllerList = null;
     private Hashtable<String, Pair<String, String>> staticContentMap = null;
 
-    // Dynamic substitutions
-    VelocityContext vc = null;
     VelocityEngine ve = null;
 
     // Renderer of content
@@ -163,8 +161,9 @@ public class AdminServlet extends HttpServlet {
 
             // This is static content
             if (query.startsWith("/stop")) {
+                VelocityContext vc = new VelocityContext();
                 vc.put("RESULTS", "<p>Alitheia Core is now shutdown.</p>");
-                sendPage(response, request, "/results.html");
+                sendPage(response, request, "/results.html", vc);
 
                 // Now stop the system
                 logger.info("System stopped by user request to webadmin.");
@@ -177,8 +176,9 @@ public class AdminServlet extends HttpServlet {
                 return;
             }
             if (query.startsWith("/restart")) {
+                VelocityContext vc = new VelocityContext();
                 vc.put("RESULTS", "<p>Alitheia Core is now restarting.</p>");
-                sendPage(response, request, "/results.html");
+                sendPage(response, request, "/results.html", vc);
 
                 //FIXME: How do we do a restart?
                 return;
@@ -212,13 +212,15 @@ public class AdminServlet extends HttpServlet {
      * @throws IOException
      */
     protected boolean handleWithController(HttpServletRequest req, HttpServletResponse resp) throws InvocationTargetException, IllegalAccessException, ServletException, IOException {
+        VelocityContext vc = new VelocityContext();
+
         String query = req.getPathInfo();
         for(AbstractView view : controllerList){
             for(Method m : view.getClass().getMethods()){
                 Action a = m.getAnnotation(Action.class);
                 if(a != null && query.equals(a.uri()) && a.method().equals(req.getMethod())){
                     m.invoke(view, req, vc);
-                    sendPage(resp, req, a.template());
+                    sendPage(resp, req, a.template(), vc);
                     return true;
                 }
             }
@@ -239,20 +241,6 @@ public class AdminServlet extends HttpServlet {
 
             if(handleWithController(request, response)){
                 // already handled
-            } else
-            if (query.startsWith("/addproject")) {
-                //addProject(request);
-                sendPage(response, request, "/results.html");
-            } else if (query.startsWith("/diraddproject")) {
-                AdminService as = AlitheiaCore.getInstance().getAdminService();
-                AdminAction aa = as.create(AddProject.MNEMONIC);
-                aa.addArg("dir", request.getParameter("properties"));
-                as.execute(aa);
-                if (aa.hasErrors())
-                	vc.put("RESULTS", aa.errors());
-                else
-                	vc.put("RESULTS", aa.results());
-                sendPage(response, request, "/results.html");
             } else {
                 doGet(request,response);
             }
@@ -280,8 +268,8 @@ public class AdminServlet extends HttpServlet {
      * TODO: How to simulate conditions that will cause IOException
      */
     protected void sendResource(HttpServletResponse response, Pair<String,String> source)
-        throws ServletException, IOException {
-        
+        throws ServletException, IOException
+    {
         InputStream istream = getClass().getResourceAsStream(source.first);
         if ( istream == null ) {
             throw new IOException("Path not found: " + source.first);
@@ -299,11 +287,9 @@ public class AdminServlet extends HttpServlet {
         }
     }
 
-    protected void sendPage(
-            HttpServletResponse response,
-            HttpServletRequest request,
-            String path)
-        throws ServletException, IOException {
+    protected void sendPage(HttpServletResponse response, HttpServletRequest request, String path, VelocityContext vc)
+            throws ServletException, IOException
+    {
         Template t = null;
         try {
             t = ve.getTemplate( path );
@@ -316,14 +302,14 @@ public class AdminServlet extends HttpServlet {
         PrintWriter print = response.getWriter();
 
         // Do any substitutions that may be required
-        createSubstitutions(request);
+        createSubstitutions(request, vc);
         response.setContentType("text/html");
         t.merge(vc, writer);
 
         print.print(writer.toString());
     }
 
-    private void createSubstitutions(HttpServletRequest request) {
+    private void createSubstitutions(HttpServletRequest request, VelocityContext vc) {
         // Initialize the resource bundles with the provided locale
         AbstractView.initResources(Locale.ENGLISH);
 
