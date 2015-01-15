@@ -1,6 +1,7 @@
 package eu.sqooss.impl.service.webadmin;
 
 import eu.sqooss.service.logging.Logger;
+import junit.framework.Assert;
 import junit.framework.ComparisonFailure;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -35,11 +36,17 @@ public class HTMLTest {
         return ve;
     }
 
-    public String render(String template, HttpServletRequest req, VelocityContext vc) throws Exception {
-        Template t = Engine().getTemplate( template );
-        StringWriter writer = new StringWriter();
-        t.merge(vc, writer);
-        return writer.toString();
+    public String render(String template, HttpServletRequest req, VelocityContext vc) {
+        try {
+            if(template == null && vc.containsKey("subtemplate"))
+                template = vc.get("subtemplate").toString(); Template t = Engine().getTemplate( template );
+            StringWriter writer = new StringWriter();
+            t.merge(vc, writer);
+            return writer.toString();
+        } catch (Exception e){
+            Assert.fail("An exception occurred while rendering Velocity template: "+e.toString());
+            return null;
+        }
     }
 
     protected static void assertWhiteSpaceEqual(String expected, String actual){
