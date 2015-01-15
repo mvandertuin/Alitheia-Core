@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletRequest;
 import eu.sqooss.service.cluster.ClusterNodeService;
 import eu.sqooss.service.metricactivator.MetricActivator;
 import eu.sqooss.service.pa.PluginAdmin;
+import eu.sqooss.service.scheduler.Scheduler;
 import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 
@@ -59,22 +60,11 @@ import eu.sqooss.service.scheduler.SchedulerException;
 import eu.sqooss.service.updater.UpdaterService;
 import eu.sqooss.service.updater.UpdaterService.UpdaterStage;
 
-public class ProjectsView extends AbstractView {
+public class ProjectsController extends Controller {
     // Script for submitting this page
     static String SUBMIT = "document.projects.submit();";
 
-    // Action parameter's values
-    static String ACT_REQ_ADD_PROJECT   = "reqAddProject";
-    static String ACT_CON_ADD_PROJECT   = "conAddProject";
-    static String ACT_REQ_REM_PROJECT   = "reqRemProject";
-    static String ACT_CON_REM_PROJECT   = "conRemProject";
-    static String ACT_REQ_SHOW_PROJECT  = "conShowProject";
-    static String ACT_CON_UPD_ALL       = "conUpdateAll";
-    static String ACT_CON_UPD           = "conUpdate";
-    static String ACT_CON_UPD_ALL_NODE  = "conUpdateAllOnNode";
-
     // Servlet parameters
-    static String REQ_PAR_ACTION        = "reqAction";
     static String REQ_PAR_PROJECT_ID    = "projectId";
     static String REQ_PAR_PRJ_NAME      = "projectName";
     static String REQ_PAR_PRJ_WEB       = "projectHomepage";
@@ -82,9 +72,8 @@ public class ProjectsView extends AbstractView {
     static String REQ_PAR_PRJ_BUG       = "projectBL";
     static String REQ_PAR_PRJ_MAIL      = "projectML";
     static String REQ_PAR_PRJ_CODE      = "projectSCM";
-    static String REQ_PAR_SYNC_PLUGIN   = "reqParSyncPlugin";
-    static String REQ_PAR_UPD           = "reqUpd";
-
+    
+	static Scheduler sched;
     static PluginAdmin pa;
     static UpdaterService updater;
     static ClusterNodeService clusterNode;
@@ -96,8 +85,9 @@ public class ProjectsView extends AbstractView {
      *
      * @param bundlecontext the <code>BundleContext</code> object
      */
-    public ProjectsView(BundleContext bundlecontext) {
+    public ProjectsController(BundleContext bundlecontext) {
         super(bundlecontext);
+		sched = AlitheiaCore.getInstance().getScheduler();
         pa = AlitheiaCore.getInstance().getPluginAdmin();
         updater = AlitheiaCore.getInstance().getUpdater();
         clusterNode = AlitheiaCore.getInstance().getClusterNodeService();
@@ -403,4 +393,3 @@ public class ProjectsView extends AbstractView {
 }
 
 // vi: ai nosi sw=4 ts=4 expandtab
-

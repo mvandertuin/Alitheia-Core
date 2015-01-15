@@ -60,7 +60,7 @@ import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.tds.TDSService;
 import eu.sqooss.service.updater.UpdaterService;
 
-public abstract class AbstractView {
+public abstract class Controller {
     // Core components
     protected static AlitheiaCore sobjCore = null;
     protected static ServiceReference srefCore = null;
@@ -102,7 +102,7 @@ public abstract class AbstractView {
      * 
      * @param bundlecontext the parent bundle's context
      */
-    public AbstractView(BundleContext bundlecontext) {
+    public Controller(BundleContext bundlecontext) {
         // Keep the Velocity context instance
         this.bc = bundlecontext;
        

@@ -39,22 +39,29 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import eu.sqooss.core.AlitheiaCore;
+import eu.sqooss.service.db.*;
+import eu.sqooss.service.metricactivator.MetricActivator;
+import eu.sqooss.service.pa.PluginAdmin;
 import org.apache.velocity.VelocityContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
-import eu.sqooss.service.db.DAObject;
-import eu.sqooss.service.db.Metric;
-import eu.sqooss.service.db.Plugin;
-import eu.sqooss.service.db.PluginConfiguration;
 import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.pa.PluginInfo.ConfigurationType;
 import eu.sqooss.service.util.StringUtils;
 
-public class PluginsView extends AbstractView{
+public class PluginsView extends Controller {
+
+    private DBService db;
+    private MetricActivator ma;
+    private PluginAdmin pa;
 
     public PluginsView(BundleContext bundlecontext) {
         super(bundlecontext);
+        db = AlitheiaCore.getInstance().getDBService();
+        ma = AlitheiaCore.getInstance().getMetricActivator();
+        pa = AlitheiaCore.getInstance().getPluginAdmin();
     }
     
     public String getPluginClass(PluginInfo i){

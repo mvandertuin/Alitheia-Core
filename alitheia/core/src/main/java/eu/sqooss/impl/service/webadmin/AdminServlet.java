@@ -71,7 +71,7 @@ public class AdminServlet extends HttpServlet {
     private DBService db = null;
 
     // Content tables
-    private List<AbstractView> controllerList = null;
+    private List<Controller> controllerList = null;
     private Hashtable<String, String> templateContent = null;
     private Hashtable<String, Pair<String, String>> staticContentMap = null;
 
@@ -84,7 +84,7 @@ public class AdminServlet extends HttpServlet {
     PluginsView pluginsView = null;
 
     // Projects view
-    ProjectsView projectsView = null;
+    ProjectsController projectsController;
 
     TranslationProxy tr = new TranslationProxy();
 
@@ -131,9 +131,9 @@ public class AdminServlet extends HttpServlet {
         controllerList = new ArrayList<>();
         adminView = new WebAdminRenderer(bc);
         pluginsView = new PluginsView(bc);
-        projectsView = new ProjectsView(bc);
+        projectsController = new ProjectsController(bc);
         controllerList.add(adminView);
-        controllerList.add(projectsView);
+        controllerList.add(projectsController);
         controllerList.add(pluginsView);
     }
 
@@ -217,7 +217,7 @@ public class AdminServlet extends HttpServlet {
         VelocityContext vc = new VelocityContext();
 
         String query = req.getPathInfo();
-        for(AbstractView view : controllerList){
+        for(Controller view : controllerList){
             for(Method m : view.getClass().getMethods()){
                 Action a = m.getAnnotation(Action.class);
                 if(a != null && query.equals(a.uri()) && a.method().equals(req.getMethod())){
@@ -313,10 +313,10 @@ public class AdminServlet extends HttpServlet {
 
     private void createSubstitutions(HttpServletRequest request, VelocityContext vc) {
         // Initialize the resource bundles with the provided locale
-        AbstractView.initResources(Locale.ENGLISH);
+        Controller.initResources(Locale.ENGLISH);
 
         // Simple string substitutions
-        vc.put("APP_NAME", AbstractView.getLbl("app_name"));
+        vc.put("APP_NAME", Controller.getLbl("app_name"));
         vc.put("COPYRIGHT",
                 "Copyright 2007-2008"
                 + "<a href=\"http://www.sqo-oss.eu/about/\">"
@@ -329,7 +329,7 @@ public class AdminServlet extends HttpServlet {
         vc.put("scheduler", adminView.sobjSched.getSchedulerStats());
         vc.put("tr",tr); // translations proxy
         vc.put("admin",adminView);
-        vc.put("projects",projectsView);
+        vc.put("projects", projectsController);
         vc.put("metrics",pluginsView);
         vc.put("request", request); // The request can be used by the render() methods
     }
@@ -347,17 +347,17 @@ public class AdminServlet extends HttpServlet {
 
         /** Translate a label */
         public String label(String s) {
-            return AbstractView.getLbl(s);
+            return Controller.getLbl(s);
         }
 
         /** Translate a (multi-line, html formatted) message */
         public String message(String s) {
-            return AbstractView.getMsg(s);
+            return Controller.getMsg(s);
         }
 
         /** Translate an error message */
         public String error(String s) {
-            return AbstractView.getErr(s);
+            return Controller.getErr(s);
         }
     }
 }
