@@ -96,7 +96,7 @@ public class ProjectsView extends AbstractView {
      * @param vc the <code>VelocityContext</code> object
      * @param bundlecontext the <code>BundleContext</code> object
      */
-    public ProjectsView(BundleContext bundlecontext, VelocityContext vc) {
+    public ProjectsView(BundleContext bundlecontext) {
         super(bundlecontext);
         pa = AlitheiaCore.getInstance().getPluginAdmin();
         updater = AlitheiaCore.getInstance().getUpdater();

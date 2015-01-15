@@ -77,6 +77,7 @@ public class AdminServlet extends HttpServlet {
 
     // Content tables
     private List<AbstractView> controllerList = null;
+    private Hashtable<String, String> templateContent = null;
     private Hashtable<String, Pair<String, String>> staticContentMap = null;
 
     VelocityEngine ve = null;
@@ -122,17 +123,20 @@ public class AdminServlet extends HttpServlet {
         addStaticContent("/jobs.png", "image/x-png");
         addStaticContent("/rules.png", "image/x-png");
 
-        // Create the dynamic content map
+        // Create the template content map
+        templateContent = new Hashtable<>();
+        templateContent.put("/logs", "logs.html");
+        templateContent.put("/jobs", "jobs.html");
+        templateContent.put("/alljobs", "alljobs.html");
+        templateContent.put("/users", "users.html");
+        templateContent.put("/rules", "rules.html");
+        templateContent.put("/jobstat", "jobstat.html");
+
+        // Create the controller content map
         controllerList = new ArrayList<>();
-
-        // Now the dynamic substitutions and renderer
-        vc = new VelocityContext();
-        adminView = new WebAdminRenderer(bc, vc);
-
-        // Create the various view objects
-        pluginsView = new PluginsView(bc, vc);
-        projectsView = new ProjectsView(bc, vc);
-
+        adminView = new WebAdminRenderer(bc);
+        pluginsView = new PluginsView(bc);
+        projectsView = new ProjectsView(bc);
         controllerList.add(adminView);
         controllerList.add(projectsView);
         controllerList.add(pluginsView);
@@ -185,6 +189,9 @@ public class AdminServlet extends HttpServlet {
             }
             else if (staticContentMap.containsKey(query)) {
                 sendResource(response, staticContentMap.get(query));
+            }
+            else if (templateContent.containsKey(query)) {
+                sendPage(response, request, templateContent.get(query), new VelocityContext());
             }
             else if(!handleWithController(request, response)) {
                 logger.warn("Request ("+ request.getMethod() + " " + request.getPathInfo() + ") was unhandled.");

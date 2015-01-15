@@ -58,8 +58,8 @@ public class WebAdminRenderer  extends AbstractView {
      */
     private static long startTime = new Date().getTime();
 
-    public WebAdminRenderer(BundleContext bundlecontext, VelocityContext vc) {
-        super(bundlecontext, vc);
+    public WebAdminRenderer(BundleContext bundlecontext) {
+        super(bundlecontext);
     }
 
     /**
