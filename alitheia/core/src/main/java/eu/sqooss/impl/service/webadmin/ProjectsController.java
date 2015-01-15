@@ -78,7 +78,6 @@ public class ProjectsController extends Controller {
     static PluginAdmin pa;
     static UpdaterService updater;
     static ClusterNodeService clusterNode;
-    static AdminService admin;
     private MetricActivator ma;
 
     /**
@@ -92,7 +91,6 @@ public class ProjectsController extends Controller {
         pa = AlitheiaCore.getInstance().getPluginAdmin();
         updater = AlitheiaCore.getInstance().getUpdater();
         clusterNode = AlitheiaCore.getInstance().getClusterNodeService();
-        admin = AlitheiaCore.getInstance().getAdminService();
         ma = AlitheiaCore.getInstance().getMetricActivator();
     }
 
@@ -193,7 +191,8 @@ public class ProjectsController extends Controller {
     @Action(uri = "/projects_add", template = TEMPLATE, method = Action.POST)
     public void addPost(HttpServletRequest req, VelocityContext vc)
     {
-        AdminAction aa = admin.create(AddProject.MNEMONIC);
+        AdminService as = AlitheiaCore.getInstance().getAdminService();
+        AdminAction aa = as.create(AddProject.MNEMONIC);
         // Properties below correspond to where AddProject will be looking
         aa.addArg("scm",     req.getParameter(REQ_PAR_PRJ_CODE));
         aa.addArg("name",    req.getParameter(REQ_PAR_PRJ_NAME));
@@ -201,7 +200,7 @@ public class ProjectsController extends Controller {
         aa.addArg("mail",    req.getParameter(REQ_PAR_PRJ_MAIL));
         aa.addArg("web",     req.getParameter(REQ_PAR_PRJ_WEB));
         aa.addArg("contact", req.getParameter(REQ_PAR_PRJ_CONT));
-        admin.execute(aa);
+        as.execute(aa);
 
         StoredProject proj = null;
 
@@ -221,9 +220,10 @@ public class ProjectsController extends Controller {
     @Action(uri = "/projects_diradd", template = TEMPLATE, method = Action.POST)
     public void addDirectoryPost(HttpServletRequest req, VelocityContext vc)
     {
-        AdminAction aa = admin.create(AddProject.MNEMONIC);
+        AdminService as = AlitheiaCore.getInstance().getAdminService();
+        AdminAction aa = as.create(AddProject.MNEMONIC);
         aa.addArg("dir", req.getParameter("properties"));
-        admin.execute(aa);
+        as.execute(aa);
 
         vc.put(SUBTEMPLATE, "projects/edit.html");
 
@@ -286,11 +286,12 @@ public class ProjectsController extends Controller {
 
         if(projectList != null)
         for (StoredProject project : projectList) {
-            AdminAction aa = admin.create(UpdateProject.MNEMONIC);
+            AdminService as = AlitheiaCore.getInstance().getAdminService();
+            AdminAction aa = as.create(UpdateProject.MNEMONIC);
             aa.addArg("project", project.getId());
             if("single".equals(scope))
                 aa.addArg("updater", req.getParameter("updater"));
-            admin.execute(aa);
+            as.execute(aa);
             if (aa.hasErrors()) {
                 error(vc, aa.errors());
             } else {

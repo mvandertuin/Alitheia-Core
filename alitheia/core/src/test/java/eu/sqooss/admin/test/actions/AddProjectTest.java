@@ -49,7 +49,7 @@ public class AddProjectTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        impl = new AdminServiceImpl(db);
+        //impl = new AdminServiceImpl(db);
         impl.registerAdminAction(new AddProject().mnemonic(), AddProject.class);
     }
 
