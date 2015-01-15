@@ -15,9 +15,9 @@
     	</td>
     	<td class="borderless">
     		#if($update)
-    		$propertyName
+    		$!reqValPropName
     		#else
-    		<input type="text" class="form" id="$reqParPropName" name="$reqParPropName" value="$propertyName">
+    		<input type="text" class="form" id="$reqParPropName" name="$reqParPropName" value="$!reqValPropName">
 			#end
     	</td>
     </tr>
@@ -27,9 +27,9 @@
     	</td>
     	<td class="borderless">
     		#if($update)
-    		$propertyDescriptor
+    		$!reqValPropDescr
     		#else
-    		<input type="text" class="form" id="$reqParPropDescr" name="$reqParPropDescr" value="$propertyDescriptor">
+    		<input type="text" class="form" id="$reqParPropDescr" name="$reqParPropDescr" value="$!reqValPropDescr">
 			#end
     	</td>
     </tr>
@@ -39,12 +39,12 @@
     	</td>
     	<td class="borderless">
     		#if($update)
-    		$propertyType
+    		$!reqValPropType
     		#else
 			<select class="form" id="$reqParPropType" name="$reqParPropType">
 				#foreach($type in $ConfigurationTypes)
 					<option value="$type.toString()" 
-						#if ($type.toString().equals($propertyType))
+						#if ($type.toString().equals($!reqValPropType))
 						"selected"
 						#end
 					>
@@ -60,12 +60,17 @@
     		<b>Value</b>
     	</td>
     	<td class="borderless">
-    		<input type="text" class="form" id="$reqParPropValue" name="$reqParPropValue" value="$propertyValue">
+    		<input type="text" class="form" id="$reqParPropValue" name="$reqParPropValue" value="$!reqValPropValue">
     	</td>
     </tr>	
     <tr>
 		<td colspan="2" class="borderless">
-    		<input type="button" class="install" style="width:100px;" value="${propertyAction}" onclick="javascript:document.getElementById('$reqParAction').value='$actValConAddProp';document.metrics.submit();">
+    		<input type="button" class="install" style="width:100px;" value=
+    		#if(update)
+    		"Update"
+    		#else
+    		"Create"
+    		 onclick="javascript:document.getElementById('$reqParAction').value='$actValConAddProp';document.metrics.submit();">
 			#if($update)
 			<input type="button" class="install" style="width:100px;" value="Remove" onclick="javascript:document.getElementById('$reqParAction').value='$actValConRemProp';document.metrics.submit();">
 			#end
