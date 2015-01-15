@@ -238,8 +238,7 @@ public class AdminServlet extends HttpServlet {
         }
 
         try {
-            String query = request.getPathInfo();
-            logger.debug("POST:" + query);
+            logger.debug("POST:" + request.getPathInfo());
 
             if(handleWithController(request, response)){
                 // already handled

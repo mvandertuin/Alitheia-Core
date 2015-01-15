@@ -61,8 +61,9 @@ import eu.sqooss.service.updater.UpdaterService;
 import eu.sqooss.service.updater.UpdaterService.UpdaterStage;
 
 public class ProjectsController extends Controller {
-    // Script for submitting this page
-    static String SUBMIT = "document.projects.submit();";
+
+    public static final String TEMPLATE = "projects.html";
+    public static final String SUBTEMPLATE = "subtemplate";
 
     // Servlet parameters
     static String REQ_PAR_PROJECT_ID    = "projectId";
@@ -102,7 +103,7 @@ public class ProjectsController extends Controller {
     }
 
     protected void general(HttpServletRequest req, VelocityContext vc, StoredProject selProject){
-        // Initialize the resource bundles with the request's locale
+        // Initialize the resource bundles with the requests locale
         initResources(req.getLocale());
 
         vc.put("selectedProject", selProject);
@@ -162,12 +163,12 @@ public class ProjectsController extends Controller {
         vc.put("projectModels", projs);
     }
 
-    @Action(uri = "/projects", template = "projects.html")
+    @Action(uri = "/projects", template = TEMPLATE)
     public void list(HttpServletRequest req, VelocityContext vc)
     {
         StoredProject selProject = selectedProject(req);
 
-        vc.put("subtemplate", selProject == null ? "projects/list.html" : "projects/edit.html");
+        vc.put(SUBTEMPLATE, selProject == null ? "projects/list.html" : "projects/edit.html");
 
         general(req, vc, selProject);
     }
@@ -175,7 +176,7 @@ public class ProjectsController extends Controller {
     @Action(uri = "/projects_add", template = "projects.html")
     public void add(HttpServletRequest req, VelocityContext vc)
     {
-        vc.put("subtemplate", "projects/add.html");
+        vc.put(SUBTEMPLATE, "projects/add.html");
         vc.put("form", projectTable(req));
     }
 
@@ -190,7 +191,7 @@ public class ProjectsController extends Controller {
         );
     }
 
-    @Action(uri = "/projects_add", template = "projects.html", method = "POST")
+    @Action(uri = "/projects_add", template = TEMPLATE, method = Action.POST)
     public void addPost(HttpServletRequest req, VelocityContext vc)
     {
         AdminAction aa = admin.create(AddProject.MNEMONIC);
@@ -213,19 +214,19 @@ public class ProjectsController extends Controller {
             proj = StoredProject.getProjectByName(req.getParameter(REQ_PAR_PRJ_NAME));
         }
 
-        vc.put("subtemplate", proj == null ? "projects/add.html" : "projects/list.html");
+        vc.put(SUBTEMPLATE, proj == null ? "projects/add.html" : "projects/list.html");
 
         general(req, vc, proj);
     }
 
-    @Action(uri = "/projects_diradd", template = "projects.html", method = "POST")
+    @Action(uri = "/projects_diradd", template = TEMPLATE, method = Action.POST)
     public void addDirectoryPost(HttpServletRequest req, VelocityContext vc)
     {
         AdminAction aa = admin.create(AddProject.MNEMONIC);
         aa.addArg("dir", req.getParameter("properties"));
         admin.execute(aa);
 
-        vc.put("subtemplate", "projects/edit.html");
+        vc.put(SUBTEMPLATE, "projects/edit.html");
 
         if(aa.hasErrors()){
             error(vc, aa.errors());
@@ -237,17 +238,17 @@ public class ProjectsController extends Controller {
         general(req, vc, selProject);
     }
 
-    @Action(uri = "/projects_delete", template = "projects.html", method = "GET")
+    @Action(uri = "/projects_delete", template = TEMPLATE)
     public void deleteConfirm(HttpServletRequest req, VelocityContext vc)
     {
         StoredProject selProject = selectedProject(req);
         vc.put("selectedProject", selProject);
-        vc.put("subtemplate", "projects/delete_confirm.html");
+        vc.put(SUBTEMPLATE, "projects/delete_confirm.html");
     }
 
-    @Action(uri = "/projects_delete", template = "projects.html", method = "POST")
+    @Action(uri = "/projects_delete", template = TEMPLATE, method = Action.POST)
     public void deleteConfirmed(HttpServletRequest req, VelocityContext vc){
-        vc.put("subtemplate", "projects/list.html");
+        vc.put(SUBTEMPLATE, "projects/list.html");
 
         StoredProject selProject = selectedProject(req);
         if (selProject != null)
@@ -267,9 +268,9 @@ public class ProjectsController extends Controller {
         general(req, vc, selProject);
     }
 
-    @Action(uri = "/projects_update", template = "projects.html", method = "POST")
+    @Action(uri = "/projects_update", template = TEMPLATE, method = Action.POST)
     public void update(HttpServletRequest req, VelocityContext vc){
-        vc.put("subtemplate", "projects/list.html");
+        vc.put(SUBTEMPLATE, "projects/list.html");
         String scope = req.getParameter("scope");
         StoredProject selProject = selectedProject(req);
 
@@ -301,9 +302,9 @@ public class ProjectsController extends Controller {
         general(req, vc, selProject);
     }
 
-    @Action(uri = "/projects_sync", template = "projects.html", method = "POST")
+    @Action(uri = "/projects_sync", template = TEMPLATE, method = Action.POST)
     public void sync(HttpServletRequest req, VelocityContext vc){
-        vc.put("subtemplate", "projects/list.html");
+        vc.put(SUBTEMPLATE, "projects/list.html");
         StoredProject selProject = selectedProject(req);
         String reqValSyncPlugin = req.getParameter("plugin");
 
