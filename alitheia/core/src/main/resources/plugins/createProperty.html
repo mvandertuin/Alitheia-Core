@@ -65,9 +65,9 @@
     </tr>	
     <tr>
 		<td colspan="2" class="borderless">
-    		<input type="button" class="install" style="width:100px;" value="$propertyAction" onclick="javascript:document.getElementById('$reqParAction').value('$actValConAddProp');document.metrics.submit();">
+    		<input type="button" class="install" style="width:100px;" value="${propertyAction}" onclick="javascript:document.getElementById('$reqParAction').value='$actValConAddProp';document.metrics.submit();">
 			#if($update)
-			<input type="button" class="install" style="width:100px;" value="Remove" onclick="javascript:document.getElementById('$reqParAction').value('$actValConRemProp');document.metrics.submit();">
+			<input type="button" class="install" style="width:100px;" value="Remove" onclick="javascript:document.getElementById('$reqParAction').value='$actValConRemProp';document.metrics.submit();">
 			#end
 			<input type="button" class="install" style="width:100px;" value="Cancel" onclick="javascript:document.metrics.submit();">						
     	</td>
