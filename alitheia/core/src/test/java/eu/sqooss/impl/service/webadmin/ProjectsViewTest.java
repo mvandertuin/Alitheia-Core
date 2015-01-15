@@ -1,12 +1,18 @@
 package eu.sqooss.impl.service.webadmin;
 
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import eu.sqooss.core.AlitheiaCore;
 import eu.sqooss.core.AlitheiaCoreService;
+import eu.sqooss.impl.service.logging.LogManagerModule;
+import eu.sqooss.impl.service.scheduler.SchedulerServiceModule;
 import eu.sqooss.service.admin.AdminAction;
 import eu.sqooss.service.admin.AdminService;
 import eu.sqooss.service.cluster.ClusterNodeService;
 import eu.sqooss.service.db.*;
 import eu.sqooss.service.logging.LogManager;
+import eu.sqooss.service.logging.Logger;
 import eu.sqooss.service.pa.PluginAdmin;
 import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.scheduler.Scheduler;
@@ -14,7 +20,6 @@ import eu.sqooss.service.updater.Updater;
 import eu.sqooss.service.updater.UpdaterService;
 import junit.framework.ComparisonFailure;
 import org.apache.velocity.VelocityContext;
-//import org.hamcrest.text.IsEqualIgnoringWhiteSpace;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -86,7 +91,6 @@ public class ProjectsViewTest {
     @Test
     public void testCreateFrom_AddProject() {
         request.setParameter(ProjectsView.REQ_PAR_ACTION, ProjectsView.ACT_CON_ADD_PROJECT);
-//        Mockito.when(action.results()).thenReturn(Collections.<String,Object>emptyMap());
         String result = projectsView.render(request);
         assertWhiteSpaceEqual(addProject, result);
     }
