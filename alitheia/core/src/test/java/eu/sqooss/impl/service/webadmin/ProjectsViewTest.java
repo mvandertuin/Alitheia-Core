@@ -1,27 +1,17 @@
 package eu.sqooss.impl.service.webadmin;
 
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.core.AlitheiaCoreService;
-import eu.sqooss.impl.service.logging.LogManagerModule;
-import eu.sqooss.impl.service.scheduler.SchedulerServiceModule;
 import eu.sqooss.service.admin.AdminAction;
 import eu.sqooss.service.admin.AdminService;
 import eu.sqooss.service.cluster.ClusterNodeService;
 import eu.sqooss.service.db.*;
-import eu.sqooss.service.logging.LogManager;
-import eu.sqooss.service.logging.Logger;
 import eu.sqooss.service.pa.PluginAdmin;
 import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.updater.Updater;
 import eu.sqooss.service.updater.UpdaterService;
-import junit.framework.ComparisonFailure;
 import org.apache.velocity.VelocityContext;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -30,7 +20,6 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-import javax.mail.Store;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -41,7 +30,7 @@ import static org.mockito.Mockito.*;
  * A test verifying that the HTML output is unchanged before and after the refactor.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ProjectsViewTest {
+public class ProjectsViewTest extends HTMLTest {
     static long failid;
     static long successid;
 
@@ -54,7 +43,7 @@ public class ProjectsViewTest {
     @Mock AdminService as;
     @Mock ClusterNodeService cns;
     @Mock ProjectDeleteJobFactory pdjf;
-    @Mock VelocityContext vc;
+    VelocityContext vc;
     @Mock Scheduler shed;
     @Mock UpdaterService updsrv;
 
@@ -64,6 +53,10 @@ public class ProjectsViewTest {
 
     @Before
     public void setup(){
+        vc = new VelocityContext();
+        vc.put("tr",new TranslationProxy());
+        vc.put("projects", projectsView);
+
         request = new MockHttpServletRequest();
         request.setMethod("GET");
         request.setPathInfo("/projects");
@@ -83,8 +76,9 @@ public class ProjectsViewTest {
     }
 
     @Test
-    public void testIndex() {
-        String result = projectsView.render(request);
+    public void testIndex() throws Exception {
+        projectsView.list(request, vc);
+        String result = render("projects/list.html", request, vc);
         assertWhiteSpaceEqual(index, result);
     }
 
@@ -198,19 +192,6 @@ public class ProjectsViewTest {
         plugin.installed = true;
         when(plugin.getPluginName()).thenReturn("Some Plugin");
         when(pa.listPlugins()).thenReturn(Collections.nCopies(2, plugin));
-    }
-
-    private static void assertWhiteSpaceEqual(String expected, String actual){
-        if(!reduceWhitespace(expected).equalsIgnoreCase(reduceWhitespace(actual)))
-            throw new ComparisonFailure("", expected, actual);
-    }
-
-    private static String reduceWhitespace(String in){
-        String s = in.replaceAll("\\s+", " ").replaceAll(">\\s", ">").replaceAll(">\\s<", "><").replaceAll("(\\s$|^\\s)", "");
-//        String o = "";
-//        for(int i = 0; i < s.length(); i+=40)
-//            o += s.substring(i, Math.min(i+40, s.length()-1))+"\n";
-        return s;//o;
     }
 
     private static final String index = "<form id=\"projects\" name=\"projects\" method=\"post\" action=\"/projects\"> <table> <thead> <tr class=\"head\"> <td class='head' style='width: 10%;'>Project Id</td> <td class='head' style='width: 35%;'>Project Name</td> <td class='head' style='width: 15%;'>Last Version</td> <td class='head' style='width: 15%;'>Last Email</td> <td class='head' style='width: 15%;'>Last Bug</td> <td class='head' style='width: 10%;'>Evaluated</td> <td class='head' style='width: 10%;'>Host</td> </tr> </thead> <tr> <td colspan=\"6\" class=\"noattr\">No projects found.</td> </tr> <tr class=\"subhead\"> <td>View</td><td colspan=\"6\"> <input type=\"button\" class=\"install\" style=\"width: 100px;\" value=\"Refresh\" onclick=\"javascript:window.location='/projects';\"></td></tr><tr class=\"subhead\"><td>Manage</td><td colspan='6'> <input type=\"button\" class=\"install\" style=\"width: 100px;\" value=\"Add project\" onclick=\"javascript:document.getElementById('reqAction').value='reqAddProject';document.projects.submit();\"> <input type=\"button\" class=\"install\" style=\"width: 100px;\" value=\"Delete project\" onclick=\"javascript:document.getElementById('reqAction').value='reqRemProject';document.projects.submit();\" disabled></td></tr><tr class='subhead'><td>Update</td><td colspan='4'> <input type=\"button\" class=\"install\" value=\"Run Updater\" onclick=\"javascript:document.getElementById('reqAction').value='conUpdate';document.projects.submit();\" disabled> <input type=\"button\" class=\"install\" value=\"Run All Updaters\" onclick=\"javascript:document.getElementById('reqAction').value='conUpdateAll';document.projects.submit();\" disabled> </td> <td colspan=\"2\" align=\"right\"> <input type=\"button\" class=\"install\" value=\"Update all on null\" onclick=\"javascript:document.getElementById('reqAction').value='conUpdateAllOnNode';document.projects.submit();\"> </td> </tr> </tbody> </table> </fieldset> <input type='hidden' id='reqAction' name='reqAction' value=''> <input type='hidden' id='projectId' name='projectId' value=''> <input type='hidden' id='reqParSyncPlugin' name='reqParSyncPlugin' value=''> </form>";

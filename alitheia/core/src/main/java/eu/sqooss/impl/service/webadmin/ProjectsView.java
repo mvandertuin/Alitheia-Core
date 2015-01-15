@@ -56,7 +56,6 @@ import eu.sqooss.service.db.ProjectVersion;
 import eu.sqooss.service.db.StoredProject;
 import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.scheduler.SchedulerException;
-import eu.sqooss.service.updater.Updater;
 import eu.sqooss.service.updater.UpdaterService;
 import eu.sqooss.service.updater.UpdaterService.UpdaterStage;
 
@@ -197,12 +196,8 @@ public class ProjectsView extends AbstractView {
         StringBuilder e = new StringBuilder();
         StoredProject proj = addProject(vc, req);
 
-        if(proj == null){
-            vc.put("subtemplate", "errormessage.html");
-        } else {
-            vc.put("subtemplate", "projects/edit.html");
-            general(req, vc, proj);
-        }
+        vc.put("subtemplate", "projects/add.html");
+        general(req, vc, proj);
     }
 
     @Action(uri = "/projects_diradd", template = "projects.html", method = "POST")
@@ -238,7 +233,8 @@ public class ProjectsView extends AbstractView {
         StoredProject selProject = selectedProject(req);
         StringBuilder e = new StringBuilder();
         selProject = removeProject(vc, selProject, 0);
-        vc.put("selectedProject", selProject);
+
+        general(req, vc, selProject);
     }
 
     @Action(uri = "/projects_update", template = "projects.html", method = "POST")
@@ -289,11 +285,18 @@ public class ProjectsView extends AbstractView {
     	aa.addArg("bts", r.getParameter(REQ_PAR_PRJ_BUG));
     	aa.addArg("mail", r.getParameter(REQ_PAR_PRJ_MAIL));
     	aa.addArg("web", r.getParameter(REQ_PAR_PRJ_WEB));
+    	aa.addArg("contact", r.getParameter(REQ_PAR_PRJ_CONT));
 		admin.execute(aa);
 
     	if (aa.hasErrors()) {
             error(vc, aa.errors());
-            return null;
+            StoredProject falsy = new StoredProject(r.getParameter(REQ_PAR_PRJ_NAME));
+            falsy.setScmUrl(r.getParameter(REQ_PAR_PRJ_CODE));
+            falsy.setBtsUrl(r.getParameter(REQ_PAR_PRJ_BUG));
+            falsy.setMailUrl(r.getParameter(REQ_PAR_PRJ_MAIL));
+            falsy.setWebsiteUrl(r.getParameter(REQ_PAR_PRJ_WEB));
+            falsy.setContactUrl(r.getParameter(REQ_PAR_PRJ_CONT));
+            return falsy;
     	} else {
             result(vc, aa.results());
             return StoredProject.getProjectByName(r.getParameter(REQ_PAR_PRJ_NAME));

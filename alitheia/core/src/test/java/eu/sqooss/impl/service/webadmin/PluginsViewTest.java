@@ -43,7 +43,7 @@ import static org.mockito.Mockito.*;
  * A test verifying that the HTML output is unchanged before and after the refactor.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class PluginsViewTest {
+public class PluginsViewTest extends HTMLTest {
     static long failid;
     static long successid;
 
@@ -381,16 +381,6 @@ public class PluginsViewTest {
             
         	String result = pluginsView.render(request);
         	assertWhiteSpaceEqual(renderPluginAttribute,result);
-    }
-    
-    private static void assertWhiteSpaceEqual(String expected, String actual){
-        if(!reduceWhitespace(expected).equalsIgnoreCase(reduceWhitespace(actual)))
-            throw new ComparisonFailure("", reduceWhitespace(expected), reduceWhitespace(actual));
-    }
-
-    private static String reduceWhitespace(String in){
-        String s = in.replaceAll("\\s+", "").replaceAll(">\\s", ">").replaceAll(">\\s<", "><").replaceAll("(\\s$|^\\s)", "");
-        return s;//o;
     }
 
     private static final String noPlugins = "<fieldset>\n"

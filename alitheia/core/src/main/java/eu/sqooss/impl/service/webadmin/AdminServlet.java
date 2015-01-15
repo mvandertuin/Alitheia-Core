@@ -34,10 +34,6 @@
 package eu.sqooss.impl.service.webadmin;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.impl.service.webadmin.WebAdminRenderer;
-import eu.sqooss.service.admin.AdminAction;
-import eu.sqooss.service.admin.AdminService;
-import eu.sqooss.service.admin.actions.AddProject;
 import eu.sqooss.service.db.DBService;
 import eu.sqooss.service.logging.Logger;
 import eu.sqooss.service.util.Pair;
@@ -63,7 +59,6 @@ import org.apache.velocity.VelocityContext;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.ServiceReference;
 
 public class AdminServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -72,7 +67,7 @@ public class AdminServlet extends HttpServlet {
 
     /// Logger given by our owner to write log messages to.
     private Logger logger = null;
-    
+
     private DBService db = null;
 
     // Content tables
@@ -92,7 +87,7 @@ public class AdminServlet extends HttpServlet {
     ProjectsView projectsView = null;
 
     TranslationProxy tr = new TranslationProxy();
-    
+
     public AdminServlet(BundleContext bc,
             WebadminService webadmin,
             Logger logger,
@@ -101,10 +96,10 @@ public class AdminServlet extends HttpServlet {
         AdminServlet.bc = bc;
         this.ve = ve;
         this.logger = logger;
-        
+
         AlitheiaCore core = AlitheiaCore.getInstance();
         db = core.getDBService();
-        
+
         // Create the static content map
         staticContentMap = new Hashtable<String, Pair<String, String>>();
         addStaticContent("/screen.css", "text/css");
@@ -155,8 +150,8 @@ public class AdminServlet extends HttpServlet {
                                                               IOException {
         if (!db.isDBSessionActive()) {
             db.startDBSession();
-        } 
-        
+        }
+
         try {
             String query = request.getPathInfo();
 
@@ -240,8 +235,8 @@ public class AdminServlet extends HttpServlet {
                                                                IOException {
         if (!db.isDBSessionActive()) {
             db.startDBSession();
-        } 
-        
+        }
+
         try {
             String query = request.getPathInfo();
             logger.debug("POST:" + query);
@@ -262,7 +257,7 @@ public class AdminServlet extends HttpServlet {
             }
         }
     }
-    
+
     /**
      * Sends a resource (stored in the jar file) as a response. The mime-type
      * is set to @p mimeType . The @p path to the resource should start
@@ -338,7 +333,7 @@ public class AdminServlet extends HttpServlet {
         vc.put("metrics",pluginsView);
         vc.put("request", request); // The request can be used by the render() methods
     }
-    
+
     /**
      * This is a class whose sole purpose is to provide a useful API from
      * within Velocity templates for the translation functions offered by
@@ -347,19 +342,19 @@ public class AdminServlet extends HttpServlet {
      * methods of the view.
      */
     public class TranslationProxy {
-        public TranslationProxy() { 
+        public TranslationProxy() {
         }
-        
+
         /** Translate a label */
         public String label(String s) {
             return AbstractView.getLbl(s);
         }
-        
+
         /** Translate a (multi-line, html formatted) message */
         public String message(String s) {
             return AbstractView.getMsg(s);
         }
-        
+
         /** Translate an error message */
         public String error(String s) {
             return AbstractView.getErr(s);
