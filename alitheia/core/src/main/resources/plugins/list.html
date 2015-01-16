@@ -12,21 +12,21 @@
         <tbody>
         #foreach($i in $pluginList)
         	#if(!$i.getInstalled())
-        		<tr class="edit" onclick="javascript:document.getElementById('${reqParHashcode}').value='${i.getHashcode()}';document.metrics.submit();">
-                      <td class="trans"><img src="/edit.png" alt="[Edit]">&nbsp;Registered</td>
-                      <td class="trans">$i.getPluginName()</td>
-                      <td class="trans">$metrics.getPluginClass($i)</td>
-                      <td class="trans">$i.getPluginVersion()</td>
+        		<tr class="edit" onclick="javascript:document.getElementById('$!reqParHashcode').value='$!i.getHashcode()';document.metrics.submit();">
+                      <td class="trans"><img src="/edit.png" alt="[Edit]"/>&nbsp;Registered</td>
+                      <td class="trans">$!i.getPluginName()</td>
+                      <td class="trans">$!metrics.getPluginClass($i)</td>
+                      <td class="trans">$!i.getPluginVersion()</td>
                 </tr>
                 #if($reqValShowProp)
                 	#if($i.getConfiguration() && !$i.getConfiguration().isEmpty())
                 		#foreach($p in $i.getConfiguration())
                 			<tr>
-                				<td></td>
+                				<td>&nbsp;</td>
                 				<td colspan="3" class="attr">
-                					<b>Property:</b>$p.getName()
-                					<b>Type:</b>$p.getType()                					
-                					<b>Value:</b>$p.getValue()
+                					<b>Property:</b>$!p.getName()
+                					&nbsp;<b>Type:</b>$!p.getType()                					
+                					&nbsp;<b>Value:</b>$!p.getValue()
                 				</td>
                 			</tr>
                 		#end
@@ -36,9 +36,9 @@
                 	#if($i.getActivationTypes())
                 		#foreach($a in $i.getActivationTypes())
                 			<tr>
-                				<td></td>
+                				<td>&nbsp;</td>
                 				<td colspan="3" class="attr">
-                					<b>Activator:</b>$a.getName()
+                					<b>Activator:</b>$!a.getName()
                 				</td>
                 			</tr>
                 		#end
@@ -48,21 +48,21 @@
         #end
         #foreach($i in $pluginList)
         	#if($i.getInstalled())
-        		<tr class="edit" onclick="javascript:document.getElementById('${reqParHashcode}').value='${i.getHashcode()}';document.metrics.submit();">
-                      <td class="trans"><img src="/edit.png" alt="[Edit]">&nbsp;Registered</td>
-                      <td class="trans">$i.getPluginName()</td>
-                      <td class="trans">$metrics.getPluginClass($i)</td>
-                      <td class="trans">$i.getPluginVersion()</td>
+        		<tr class="edit" onclick="javascript:document.getElementById('$!{reqParHashcode}').value='$!i.getHashcode()';document.metrics.submit();">
+                      <td class="trans"><img src="/edit.png" alt="[Edit]"/>&nbsp;Installed</td>
+                      <td class="trans">$!i.getPluginName()</td>
+                      <td class="trans">$!metrics.getPluginClass($i)</td>
+                      <td class="trans">$!i.getPluginVersion()</td>
                 </tr>
                 #if($reqValShowProp)
                 	#if($i.getConfiguration() && !$i.getConfiguration().isEmpty())
                 		#foreach($p in $i.getConfiguration())
                 			<tr>
-                				<td></td>
+                				<td>&nbsp;</td>
                 				<td colspan="3" class="attr">
-                					<b>Property:</b>$p.getName()
-                					<b>Type:</b>$p.getType()                					
-                					<b>Value:</b>$p.getValue()
+                					<b>Property:</b>$!p.getName()
+                					&nbsp;<b>Type:</b>$!p.getType()                					
+                					&nbsp;<b>Value:</b>$!p.getValue()
                 				</td>
                 			</tr>
                 		#end
@@ -72,9 +72,9 @@
                 	#if($i.getActivationTypes())
                 		#foreach($a in $i.getActivationTypes())
                 			<tr>
-                				<td></td>
+                				<td>&nbsp;</td>
                 				<td colspan="3" class="attr">
-                					<b>Activator:</b>$a.getName()
+                					<b>Activator:</b>$!a.getName()
                 				</td>
                 			</tr>
                 		#end
@@ -87,12 +87,12 @@
         <span>
         	<input type="checkbox" 
         		#if($reqValShowProp)
-        		"checked"
+        		checked
         		#end
         		onclick="javascript:document.getElementById('$reqParShowProp').value = this.checked;document.getElementById('$reqParHashcode').value='';document.metrics.submit();">Display properties
             <input type="checkbox" 
             	#if($reqValShowActv)
-        		"checked"
+        		checked
         		#end
             	onclick="javascript:document.getElementById('$reqParShowActv').value = this.checked;document.getElementById('$reqParHashcode').value='';document.metrics.submit();">Display activators
          </span>

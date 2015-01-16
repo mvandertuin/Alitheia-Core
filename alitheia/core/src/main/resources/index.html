@@ -5,30 +5,10 @@
         <div id="contents">
           <h2>$tr.label("plugins_mngm")</h2>
           <div id="table">
-			#if($errorList.length>0)
-				#parse($errorList)
+			#if($noPlugins)
+				#parse($noPlugins)
 			#end
-			
-			<form id="metrics" name="metrics" method="post" action="/index">
-				#if($noPlugins)
-					#parse($noPlugins)
-				#elseif($createProperty)
-					#parse($createProperty)
-				#elseif($pluginPage)
-					#parse($pluginPage)
-				#else
-					#parse($list)
-				#end
-				
-				<input type="hidden" id="$reqParAction" name="$reqParAction" value="">
-         		<input type="hidden" id="$reqParHashcode" name="$reqParHashcode" value="$!reqValHashcode">
-         		<input type="hidden" id="$reqParPropName" name="reqParPropName" value="$!reqValPropName">
-         		<input type="hidden" id="$reqParPropDescr" name="$reqParPropDescr" value="$!reqValPropDescr">
-         		<input type="hidden" id="$reqParPropType" name="$reqParPropType" value="$!reqValPropType">
-         		<input type="hidden" id="$reqParPropValue" name="$reqParPropValue" value="$!reqValPropValue">        
-         		<input type="hidden" id="$reqParShowProp" name="$reqParShowProp" value="$reqValShowProp">
-         		<input type="hidden" id="$reqParShowActv" name="$reqParShowActv" value="$reqValShowActv">
-			</form>	
+			#parse($content)
 						
           </div>
         </div>
