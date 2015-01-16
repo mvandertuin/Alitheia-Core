@@ -39,7 +39,8 @@ public class HTMLTest {
     public String render(String template, HttpServletRequest req, VelocityContext vc) {
         try {
             if(template == null && vc.containsKey("subtemplate"))
-                template = vc.get("subtemplate").toString(); Template t = Engine().getTemplate( template );
+                template = vc.get("subtemplate").toString(); 
+            Template t = Engine().getTemplate( template );
             StringWriter writer = new StringWriter();
             t.merge(vc, writer);
             return writer.toString();
@@ -51,11 +52,11 @@ public class HTMLTest {
 
     protected static void assertWhiteSpaceEqual(String expected, String actual){
         if(!reduceWhitespace(expected).equalsIgnoreCase(reduceWhitespace(actual)))
-            throw new ComparisonFailure("", expected, actual);
+            throw new ComparisonFailure("", reduceWhitespace(expected), reduceWhitespace(actual));
     }
 
     private static String reduceWhitespace(String in){
-        String s = in.replaceAll("\\s+", " ").replaceAll(">\\s", ">").replaceAll(">\\s<", "><").replaceAll("(\\s$|^\\s)", "");
+        String s = in.replaceAll("\\s+", "").replaceAll(">\\s", ">").replaceAll(">\\s<", "><").replaceAll("(\\s$|^\\s)", "");
 //        String o = "";
 //        for(int i = 0; i < s.length(); i+=40)
 //            o += s.substring(i, Math.min(i+40, s.length()-1))+"\n";

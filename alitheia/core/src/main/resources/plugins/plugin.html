@@ -19,9 +19,9 @@
 				Registered
 				#end
 			</td>
-			<td>$plugin.getPluginName()</td>
-			<td>$metrics.getPluginClass($plugin)</td>
-     		<td>$plugin.getPluginVersion()</td>
+			<td>$!plugin.getPluginName()</td>
+			<td>$!metrics.getPluginClass($plugin)</td>
+     		<td>$!plugin.getPluginVersion()</td>
      	</tr>
      	<tr>
      		<td colspan="4">
@@ -30,14 +30,14 @@
      				#if	($plugin.getInstalled())
      					<input type="button" class="install" style="width:100px;" value="Uninstall"
      					onclick="javascript:document.getElementById('$reqParAction').value='$actValUninstall';
-     					document.getElementById('$reqParHashcode').value='$plugin.getHashcode()';document.metrics.submit();">
+     					document.getElementById('$reqParHashcode').value='$!plugin.getHashcode()';document.metrics.submit();">
      					<input type="button" class="install" style="width:100px;" value="Synchronise"
-     					onclick="javascript:document.getElementById('$reqParAction').value='$actValSync';
-     					document.getElementById('$reqParHashcode').value='$plugin.getHashcode()';document.metrics.submit();">
+     					onclick="javascript:document.getElementById('$reqParAction').value='$!actValSync';
+     					document.getElementById('$reqParHashcode').value='$!plugin.getHashcode()';document.metrics.submit();">
 					#else
 						<input type="button" class="install" style="width:100px;" value="Install"
-     					onclick="javascript:document.getElementById('$reqParAction').value='$actValInstall';
-     					document.getElementById('$reqParHashcode').value='$plugin.getHashcode()';document.metrics.submit();">		
+     					onclick="javascript:document.getElementById('$reqParAction').value='$!actValInstall';
+     					document.getElementById('$reqParHashcode').value='$!plugin.getHashcode()';document.metrics.submit();">		
 					#end
 				</td>
 			</tr>
@@ -56,17 +56,18 @@
          </tr>
      </thead>
      <tbody>	
-     	#if($!metrics || $metrics.isEmpty())
+     	#if(!$metrics || $metrics.isEmpty())
      	<tr>
      		<td colspan="4" class="noattr">This plug-in does not support metrics.</td>
      	</tr>
      	#else
      		#foreach($metric in $metrics)
      			<tr>
-     				<td>$metric.getId()</td>
-     				<td>$metric.getMnemonic()</td>
-     				<td>$metric.getMetricType().getType()</td>
-     				<td>$metric.getDescription()</td>
+     				<td>$!metric.getId()</td>
+     				<td>$!metric.getMnemonic()</td>
+     				<td>$!metric.getMetricType().getType()</td>
+     				<td>$!metric.getDescription()</td>
+     			</tr>
      		#end
      	#end
      </tbody>
@@ -83,7 +84,7 @@
          		</tr>
      		</thead>
      		<tbody>
-    	#if($!pluginConfigs || $pluginConfigs.isEmpty())
+    	#if(!$pluginConfigs || $pluginConfigs.isEmpty())
      	<tr>
      		<td colspan="3" class="noattr">This plug-in has no configuration properties.</td>
      	</tr>
@@ -97,24 +98,24 @@
      			document.getElementById('${reqParPropValue}').value='${config.getValue()}';
      			document.metrics.submit();
      			">
-     			#if($!config.getMsg())
+     			#if(!$config.getMsg())
      				<td class="trans" title="No description available">
-     					<img src="edit.png" alt="[Edit]"/> $config.getName()
+     					<img src="edit.png" alt="[Edit]"/>&nbsp;$!config.getName()
      				</td>
      			#else
      				<td class="trans" title="${config.getMsg()}">
-     					<img src="edit.png" alt="[Edit]"/> $config.getName()
+     					<img src="/edit.png" alt="[Edit]"/>&nbsp;$!config.getName()
      				</td>
      			#end
-     				<td class="trans">$config.getType()</td>
-     				<td class="trans">$config.getValue()</td>
+     				<td class="trans">$!config.getType()</td>
+     				<td class="trans">$!config.getValue()</td>
      			</tr>
      		#end
      	#end
      	<tr>
      		<td colspan="3">
      			<input type="button" class="install" style="width:100px;" value="Add property"
-     			onclick="javascript:document.getElementById('$reqParAction').value='$actValReqAddProp';document.metrics.submit();">		
+     			onclick="javascript:document.getElementById('$reqParAction').value='$!actValReqAddProp';document.metrics.submit();">		
      		</td>
      	</tr>
      </tbody>	

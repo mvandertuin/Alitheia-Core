@@ -56,6 +56,7 @@ import eu.sqooss.service.db.PluginConfiguration;
 import eu.sqooss.service.metricactivator.MetricActivator;
 import eu.sqooss.service.pa.PluginAdmin;
 import eu.sqooss.service.pa.PluginInfo;
+import eu.sqooss.service.pa.PluginInfo.ConfigurationType;
 import eu.sqooss.service.util.StringUtils;
 
 public class PluginsView extends Controller {
@@ -163,6 +164,8 @@ public class PluginsView extends Controller {
 			if (req != null) {
 				// Retrieve the selected editor's action (if any)
 				reqValAction = req.getParameter(reqParAction);
+
+
 				if (reqValAction == null) {
 					reqValAction = "";
 				}
@@ -208,11 +211,12 @@ public class PluginsView extends Controller {
 							e.append("A job was scheduled to remove the plug-in");
 						}
 					}
-					
-					// Retrieve the selected plug-in's info object
-					selPI = pa.getPluginInfo(reqValHashcode);
 				}
 			}
+            // Retrieve the selected plug-in's info object
+            if (reqValHashcode != null) {
+                selPI = pa.getPluginInfo(reqValHashcode);
+            }
 			// Plug-in info based actions
 			if ((selPI != null) && (selPI.installed)) {
 				// =======================================================
@@ -312,20 +316,22 @@ public class PluginsView extends Controller {
 		vc.put("reqValPropValue", reqValPropValue);
 		vc.put("reqValShowProp", reqValShowProp);
 		vc.put("reqValShowActv", reqValShowActv);
-
+		vc.put("content","plugins/content.html");
 		// ===============================================================
 		// Display the accumulated error messages (if any)
 		// ===============================================================
-		vc.put("errors", e);
-		vc.put("errorList", "plugins/errors.html");
+		if(e.length()>0){
+			vc.put("errors", e);
+			vc.put("errorList", "plugins/errors.html");
+		}
 
 		// Set the selected plugin to VC
 		if (selPI != null) {
 			vc.put("plugin", selPI);
 		}
 
-		if ((selPI != null) && (selPI.installed)) {
-			if (((reqValAction.equals(actValReqAddProp)) || (reqValAction
+		if ((selPI != null)) {
+			if ((selPI.installed)&&((reqValAction.equals(actValReqAddProp)) || (reqValAction
 					.equals(actValReqUpdProp)))) {
 				// ===============================================================
 				// "Create/update configuration property" editor
@@ -336,21 +342,27 @@ public class PluginsView extends Controller {
 				boolean update = selPI.hasConfProp(reqValPropName,
 						reqValPropType);
 				vc.put("update", update);
+				vc.put("ConfigurationTypes", ConfigurationType.values());
 			} else {
 				// ===============================================================
 				// Plug-in editor
 				// ===============================================================
 				vc.put("pluginPage", "plugins/plugin.html");
+					if (selPI.installed) {
+						// Get the list of supported metrics
+						List<Metric> metrics = pa.getPlugin(selPI)
+								.getAllSupportedMetrics();
+						for(Metric m : metrics){
+							System.out.println(m.getMnemonic());
+						}
+						vc.put("metrics", metrics);
 
-				// Get the list of supported metrics
-				List<Metric> metrics = pa.getPlugin(selPI)
-						.getAllSupportedMetrics();
-				vc.put("metrics", metrics);
-
-				// Get the plug-in's configuration set
-				Set<PluginConfiguration> config = Plugin.getPluginByHashcode(
-						selPI.getHashcode()).getConfigurations();
-				vc.put("pluginConfigs", config);
+						// Get the plug-in's configuration set
+						Set<PluginConfiguration> config = Plugin
+								.getPluginByHashcode(selPI.getHashcode())
+								.getConfigurations();
+						vc.put("pluginConfigs", config);
+					}
 			}
 
 		}

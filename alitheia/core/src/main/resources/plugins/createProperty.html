@@ -66,13 +66,14 @@
     <tr>
 		<td colspan="2" class="borderless">
     		<input type="button" class="install" style="width:100px;" value=
-    		#if(update)
+    		#if($update)
     		"Update"
     		#else
     		"Create"
-    		 onclick="javascript:document.getElementById('$reqParAction').value='$actValConAddProp';document.metrics.submit();">
+    		#end
+    		 onclick="javascript:document.getElementById('$reqParAction').value='$actValConAddProp';document.metrics.submit();">&nbsp;
 			#if($update)
-			<input type="button" class="install" style="width:100px;" value="Remove" onclick="javascript:document.getElementById('$reqParAction').value='$actValConRemProp';document.metrics.submit();">
+			<input type="button" class="install" style="width:100px;" value="Remove" onclick="javascript:document.getElementById('$reqParAction').value='$actValConRemProp';document.metrics.submit();">&nbsp;
 			#end
 			<input type="button" class="install" style="width:100px;" value="Cancel" onclick="javascript:document.metrics.submit();">						
     	</td>
