@@ -366,7 +366,7 @@ public class PluginsView extends Controller {
 								// Get the list of supported metrics
 								List<Metric> metrics = pa.getPlugin(selPI)
 										.getAllSupportedMetrics();
-								vc.put("metrics", metrics);
+								vc.put("PluginMetrics", metrics);
 
 								// Get the plug-in's configuration set
 								Set<PluginConfiguration> config = Plugin
