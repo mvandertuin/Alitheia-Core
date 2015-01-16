@@ -61,6 +61,38 @@ public class PluginsView extends Controller {
 	private DBService db;
 	private MetricActivator ma;
 	private PluginAdmin pa;
+	
+	// Stores the accumulated error messages
+	StringBuilder e = new StringBuilder();
+
+	// Request parameters
+	String reqParAction = "action";
+	String reqParHashcode = "pluginHashcode";
+	String reqParPropName = "propertyName";
+	String reqParPropDescr = "propertyDescription";
+	String reqParPropType = "propertyType";
+	String reqParPropValue = "propertyValue";
+	String reqParShowProp = "showProperties";
+	String reqParShowActv = "showActivators";
+	// Recognized "action" parameter's values
+	String actValInstall = "installPlugin";
+	String actValUninstall = "uninstallPlugin";
+	String actValSync = "syncPlugin";
+	String actValReqAddProp = "createProperty";
+	String actValReqUpdProp = "updateProperty";
+	String actValConAddProp = "confirmProperty";
+	String actValConRemProp = "removeProperty";
+	// Request values
+	String reqValAction = "";
+	String reqValHashcode = null;
+	String reqValPropName = null;
+	String reqValPropDescr = null;
+	String reqValPropType = null;
+	String reqValPropValue = null;
+	boolean reqValShowProp = false; // Show plug-in properties
+	boolean reqValShowActv = false; // Show plug-in activators
+	// Info object of the selected plug-in
+	PluginInfo selPI = null;
 
 	@Inject
 	public PluginsView(@Assisted BundleContext bundlecontext, DBService db,
@@ -88,18 +120,7 @@ public class PluginsView extends Controller {
 
 	@Action(uri = "/", template = "index.html", method = "POST")
 	public void render(HttpServletRequest req, VelocityContext vc) {
-		// Stores the accumulated error messages
-		StringBuilder e = new StringBuilder();
-
-		// Request parameters
-		String reqParAction = "action";
-		String reqParHashcode = "pluginHashcode";
-		String reqParPropName = "propertyName";
-		String reqParPropDescr = "propertyDescription";
-		String reqParPropType = "propertyType";
-		String reqParPropValue = "propertyValue";
-		String reqParShowProp = "showProperties";
-		String reqParShowActv = "showActivators";
+		//put request parameters to Velocity context
 		vc.put("reqParAction", reqParAction);
 		vc.put("reqParHashcode", reqParHashcode);
 		vc.put("reqParPropName", reqParPropName);
@@ -108,19 +129,7 @@ public class PluginsView extends Controller {
 		vc.put("reqParPropValue", reqParPropValue);
 		vc.put("reqParShowProp", reqParShowProp);
 		vc.put("reqParShowActv", reqParShowActv);
-
-		// ===============================================================
-		// INPUT FIELDS
-		// ===============================================================
-		// "Action type" input field
-		// Recognized "action" parameter's values
-		String actValInstall = "installPlugin";
-		String actValUninstall = "uninstallPlugin";
-		String actValSync = "syncPlugin";
-		String actValReqAddProp = "createProperty";
-		String actValReqUpdProp = "updateProperty";
-		String actValConAddProp = "confirmProperty";
-		String actValConRemProp = "removeProperty";
+		//put action parameters to Velocity context
 		vc.put("actValInstall", actValInstall);
 		vc.put("actValUninstall", actValUninstall);
 		vc.put("actValSync", actValSync);
@@ -128,79 +137,16 @@ public class PluginsView extends Controller {
 		vc.put("actValReqUpdProp", actValReqUpdProp);
 		vc.put("actValConAddProp", actValConAddProp);
 		vc.put("actValConRemProp", actValConRemProp);
-
-		// Request values
-		String reqValAction = "";
-		String reqValHashcode = null;
-		String reqValPropName = null;
-		String reqValPropDescr = null;
-		String reqValPropType = null;
-		String reqValPropValue = null;
-		boolean reqValShowProp = false; // Show plug-in properties
-		boolean reqValShowActv = false; // Show plug-in activators
-		// Info object of the selected plug-in
-		PluginInfo selPI = null;
-
+		
+		//If no plugin present, show noPlugin page
 		if (pa.listPlugins().isEmpty()) {
 			vc.put("noPlugins", "plugins/noPlugins.html");
 		}
 
 		else {
-
-			// ===============================================================
-			// Parse the servlet's request object
-			// ===============================================================
+			//Set request parameters
 			if (req != null) {
-				// Retrieve the selected editor's action (if any)
-				reqValAction = req.getParameter(reqParAction);
-
-
-				if (reqValAction == null) {
-					reqValAction = "";
-				}
-				// Retrieve the various display flags
-				if ((req.getParameter(reqParShowProp) != null)
-						&& (req.getParameter(reqParShowProp).equals("true"))) {
-					reqValShowProp = true;
-				}
-				if ((req.getParameter(reqParShowActv) != null)
-						&& (req.getParameter(reqParShowActv).equals("true"))) {
-					reqValShowActv = true;
-				}
-				// Retrieve the selected configuration property's values
-				reqValPropName = req.getParameter(reqParPropName);
-				reqValPropDescr = req.getParameter(reqParPropDescr);
-				reqValPropType = req.getParameter(reqParPropType);
-				reqValPropValue = req.getParameter(reqParPropValue);
-				reqValHashcode = req.getParameter(reqParHashcode);
-				// Plug-in based actions
-				if (reqValHashcode != null) {
-					// =======================================================
-					// Plug-in install request
-					// =======================================================
-					if (reqValAction.equals(actValInstall)) {
-						if (pa.installPlugin(reqValHashcode) == false) {
-							e.append("Plug-in can not be installed!"
-									+ " Check log for details.");
-						}
-						// Persist the DB changes
-						else {
-							PluginInfo pInfo = pa.getPluginInfo(reqValHashcode);
-							pa.pluginUpdated(pa.getPlugin(pInfo));
-						}
-					}
-					// =======================================================
-					// Plug-in un-install request
-					// =======================================================
-					else if (reqValAction.equals(actValUninstall)) {
-						if (pa.uninstallPlugin(reqValHashcode) == false) {
-							e.append("Plug-in can not be uninstalled."
-									+ " Check log for details.");
-						} else {
-							e.append("A job was scheduled to remove the plug-in");
-						}
-					}
-				}
+				initializeRequest(req);
 			}
             // Retrieve the selected plug-in's info object
             if (reqValHashcode != null) {
@@ -208,161 +154,10 @@ public class PluginsView extends Controller {
             }
 			// Plug-in info based actions
 			if ((selPI != null) && (selPI.installed)) {
-				// =======================================================
-				// Plug-in synchronize (on all projects) request
-				// =======================================================
-				if (reqValAction.equals(actValSync)) {
-					ma.syncMetrics(pa.getPlugin(selPI));
-				}
-				// =======================================================
-				// Plug-in's configuration property removal
-				// =======================================================
-				else if (reqValAction.equals(actValConRemProp)) {
-					if (selPI.hasConfProp(reqValPropName, reqValPropType)) {
-						try {
-							if (selPI.removeConfigEntry(db, reqValPropName,
-									reqValPropType)) {
-								// Update the Plug-in Admin's information
-								pa.pluginUpdated(pa.getPlugin(selPI));
-								// Reload the PluginInfo object
-								selPI = pa.getPluginInfo(reqValHashcode);
-							} else {
-								e.append("Property removal" + " has failed!"
-										+ " Check log for details.");
-							}
-						} catch (Exception ex) {
-							e.append(ex.getMessage());
-						}
-					} else {
-						e.append("Unknown configuration property!");
-					}
-					// Return to the update view upon error
-					if (e.toString().length() > 0) {
-						reqValAction = actValReqUpdProp;
-					}
-				}
-				// =======================================================
-				// Plug-in's configuration property creation/update
-				// =======================================================
-				else if (reqValAction.equals(actValConAddProp)) {
-					// Check for a property update
-					boolean update = selPI.hasConfProp(reqValPropName,
-							reqValPropType);
-					// Update configuration property
-					if (update) {
-						try {
-							if (selPI.updateConfigEntry(db, reqValPropName,
-									reqValPropValue)) {
-								// Update the Plug-in Admin's information
-								pa.pluginUpdated(pa.getPlugin(selPI));
-								// Reload the PluginInfo object
-								selPI = pa.getPluginInfo(reqValHashcode);
-							} else {
-								e.append("Property update" + " has failed!"
-										+ " Check log for details.");
-							}
-						} catch (Exception ex) {
-							e.append(ex.getMessage());
-						}
-					}
-					// Create configuration property
-					else {
-						try {
-							if (selPI.addConfigEntry(db, reqValPropName,
-									reqValPropDescr, reqValPropType,
-									reqValPropValue)) {
-								// Update the Plug-in Admin's information
-								pa.pluginUpdated(pa.getPlugin(selPI));
-								// Reload the PluginInfo object
-								selPI = pa.getPluginInfo(reqValHashcode);
-							} else {
-								e.append("Property creation" + " has failed!"
-										+ " Check log for details.");
-							}
-						} catch (Exception ex) {
-							e.append(ex.getMessage());
-						}
-					}
-					// Return to the create/update view upon error
-					if (e.toString().length() > 0) {
-						if (update)
-							reqValAction = actValReqUpdProp;
-						else
-							reqValAction = actValReqAddProp;
-					}
-				}
+				intializeSelPI();
 			}
-
-		// ===============================================================
-		// Create the form
-		// ===============================================================
-
-		vc.put("reqValAction", reqValAction);
-		vc.put("reqValHashcode", reqValHashcode);
-		vc.put("reqValPropName", reqValPropName);
-		vc.put("reqValPropDesc", reqValPropDescr);
-		vc.put("reqValPropType", reqValPropType);
-		vc.put("reqValPropValue", reqValPropValue);
-		vc.put("reqValShowProp", reqValShowProp);
-		vc.put("reqValShowActv", reqValShowActv);
-		vc.put("content","plugins/content.html");
-		// ===============================================================
-		// Display the accumulated error messages (if any)
-		// ===============================================================
-		if(e.length()>0){
-			vc.put("errors", e);
-			vc.put("errorList", "plugins/errors.html");
-		}
-
-		// Set the selected plugin to VC
-		if (selPI != null) {
-			vc.put("plugin", selPI);
-		}
-
-		if ((selPI != null)) {
-			if ((selPI.installed)&&((reqValAction.equals(actValReqAddProp)) || (reqValAction
-					.equals(actValReqUpdProp)))) {
-				// ===============================================================
-				// "Create/update configuration property" editor
-				// ===============================================================
-				vc.put("createProperty", "plugins/createProperty.html");
-
-				// Check for a property update request
-				boolean update = selPI.hasConfProp(reqValPropName,
-						reqValPropType);
-				vc.put("update", update);
-				vc.put("ConfigurationTypes", ConfigurationType.values());
-			} else {
-				// ===============================================================
-				// Plug-in editor
-				// ===============================================================
-				vc.put("pluginPage", "plugins/plugin.html");
-					if (selPI.installed) {
-						// Get the list of supported metrics
-						List<Metric> metrics = pa.getPlugin(selPI)
-								.getAllSupportedMetrics();
-						for(Metric m : metrics){
-							System.out.println(m.getMnemonic());
-						}
-						vc.put("metrics", metrics);
-
-						// Get the plug-in's configuration set
-						Set<PluginConfiguration> config = Plugin
-								.getPluginByHashcode(selPI.getHashcode())
-								.getConfigurations();
-						vc.put("pluginConfigs", config);
-					}
-			}
-
-		}
-		// ===============================================================
-		// Plug-ins list
-		// ===============================================================
-		else {
-			Collection<PluginInfo> l = pa.listPlugins();
-			vc.put("list", "plugins/list.html");
-			vc.put("pluginList", l);
-		}
+			
+			generateHTML(vc);
 		}
 	}
 
@@ -375,5 +170,220 @@ public class PluginsView extends Controller {
 		return StringUtils.join((String[]) (i.getServiceRef()
 				.getProperty(Constants.OBJECTCLASS)), ",");
 	}
+	
+	private void initializeRequest(HttpServletRequest req){
+		// ===============================================================
+		// Parse the servlet's request object
+		// ===============================================================
+		if(req!=null){
+			// Retrieve the selected editor's action (if any)
+			reqValAction = req.getParameter(reqParAction);
 
-}
+
+			if (reqValAction == null) {
+				reqValAction = "";
+			}
+			// Retrieve the various display flags
+			if ((req.getParameter(reqParShowProp) != null)
+					&& (req.getParameter(reqParShowProp).equals("true"))) {
+				reqValShowProp = true;
+			}
+			if ((req.getParameter(reqParShowActv) != null)
+					&& (req.getParameter(reqParShowActv).equals("true"))) {
+				reqValShowActv = true;
+			}
+			// Retrieve the selected configuration property's values
+			reqValPropName = req.getParameter(reqParPropName);
+			reqValPropDescr = req.getParameter(reqParPropDescr);
+			reqValPropType = req.getParameter(reqParPropType);
+			reqValPropValue = req.getParameter(reqParPropValue);
+			reqValHashcode = req.getParameter(reqParHashcode);
+			// Plug-in based actions
+			if (reqValHashcode != null) {
+				// =======================================================
+				// Plug-in install request
+				// =======================================================
+				if (reqValAction.equals(actValInstall)) {
+					if (pa.installPlugin(reqValHashcode) == false) {
+						e.append("Plug-in can not be installed!"
+								+ " Check log for details.");
+					}
+					// Persist the DB changes
+					else {
+						PluginInfo pInfo = pa.getPluginInfo(reqValHashcode);
+						pa.pluginUpdated(pa.getPlugin(pInfo));
+					}
+				}
+				// =======================================================
+				// Plug-in un-install request
+				// =======================================================
+				else if (reqValAction.equals(actValUninstall)) {
+					if (pa.uninstallPlugin(reqValHashcode) == false) {
+						e.append("Plug-in can not be uninstalled."
+								+ " Check log for details.");
+					} else {
+						e.append("A job was scheduled to remove the plug-in");
+					}
+				}
+			}
+		}
+	}
+
+	private void intializeSelPI(){
+		if ((selPI != null) && (selPI.installed)) {
+			// =======================================================
+			// Plug-in synchronize (on all projects) request
+			// =======================================================
+			if (reqValAction.equals(actValSync)) {
+				ma.syncMetrics(pa.getPlugin(selPI));
+			}
+			// =======================================================
+			// Plug-in's configuration property removal
+			// =======================================================
+			else if (reqValAction.equals(actValConRemProp)) {
+				if (selPI.hasConfProp(reqValPropName, reqValPropType)) {
+					try {
+						if (selPI.removeConfigEntry(db, reqValPropName,
+								reqValPropType)) {
+							// Update the Plug-in Admin's information
+							pa.pluginUpdated(pa.getPlugin(selPI));
+							// Reload the PluginInfo object
+							selPI = pa.getPluginInfo(reqValHashcode);
+						} else {
+							e.append("Property removal" + " has failed!"
+									+ " Check log for details.");
+						}
+					} catch (Exception ex) {
+						e.append(ex.getMessage());
+					}
+				} else {
+					e.append("Unknown configuration property!");
+				}
+				// Return to the update view upon error
+				if (e.toString().length() > 0) {
+					reqValAction = actValReqUpdProp;
+				}
+			}
+			// =======================================================
+			// Plug-in's configuration property creation/update
+			// =======================================================
+			else if (reqValAction.equals(actValConAddProp)) {
+				// Check for a property update
+				boolean update = selPI.hasConfProp(reqValPropName,
+						reqValPropType);
+				// Update configuration property
+				if (update) {
+					try {
+						if (selPI.updateConfigEntry(db, reqValPropName,
+								reqValPropValue)) {
+							// Update the Plug-in Admin's information
+							pa.pluginUpdated(pa.getPlugin(selPI));
+							// Reload the PluginInfo object
+							selPI = pa.getPluginInfo(reqValHashcode);
+						} else {
+							e.append("Property update" + " has failed!"
+									+ " Check log for details.");
+						}
+					} catch (Exception ex) {
+						e.append(ex.getMessage());
+					}
+				}
+				// Create configuration property
+				else {
+					try {
+						if (selPI.addConfigEntry(db, reqValPropName,
+								reqValPropDescr, reqValPropType,
+								reqValPropValue)) {
+							// Update the Plug-in Admin's information
+							pa.pluginUpdated(pa.getPlugin(selPI));
+							// Reload the PluginInfo object
+							selPI = pa.getPluginInfo(reqValHashcode);
+						} else {
+							e.append("Property creation" + " has failed!"
+									+ " Check log for details.");
+						}
+					} catch (Exception ex) {
+						e.append(ex.getMessage());
+					}
+				}
+				// Return to the create/update view upon error
+				if (e.toString().length() > 0) {
+					if (update)
+						reqValAction = actValReqUpdProp;
+					else
+						reqValAction = actValReqAddProp;
+				}
+			}
+		}
+	}
+	
+	private void generateHTML(VelocityContext vc){ 
+		// ===============================================================
+				// Create the form
+				// ===============================================================
+
+				vc.put("reqValAction", reqValAction);
+				vc.put("reqValHashcode", reqValHashcode);
+				vc.put("reqValPropName", reqValPropName);
+				vc.put("reqValPropDesc", reqValPropDescr);
+				vc.put("reqValPropType", reqValPropType);
+				vc.put("reqValPropValue", reqValPropValue);
+				vc.put("reqValShowProp", reqValShowProp);
+				vc.put("reqValShowActv", reqValShowActv);
+				vc.put("content","plugins/content.html");
+				// ===============================================================
+				// Display the accumulated error messages (if any)
+				// ===============================================================
+				if(e.length()>0){
+					vc.put("errors", e);
+					vc.put("errorList", "plugins/errors.html");
+				}
+
+				// Set the selected plugin to VC
+				if (selPI != null) {
+					vc.put("plugin", selPI);
+				}
+
+				if ((selPI != null)) {
+					if ((selPI.installed)&&((reqValAction.equals(actValReqAddProp)) || (reqValAction
+							.equals(actValReqUpdProp)))) {
+						// ===============================================================
+						// "Create/update configuration property" editor
+						// ===============================================================
+						vc.put("createProperty", "plugins/createProperty.html");
+
+						// Check for a property update request
+						boolean update = selPI.hasConfProp(reqValPropName,
+								reqValPropType);
+						vc.put("update", update);
+						vc.put("ConfigurationTypes", ConfigurationType.values());
+					} else {
+						// ===============================================================
+						// Plug-in editor
+						// ===============================================================
+						vc.put("pluginPage", "plugins/plugin.html");
+							if (selPI.installed) {
+								// Get the list of supported metrics
+								List<Metric> metrics = pa.getPlugin(selPI)
+										.getAllSupportedMetrics();
+								vc.put("metrics", metrics);
+
+								// Get the plug-in's configuration set
+								Set<PluginConfiguration> config = Plugin
+										.getPluginByHashcode(selPI.getHashcode())
+										.getConfigurations();
+								vc.put("pluginConfigs", config);
+							}
+					}
+
+				}
+				// ===============================================================
+				// Plug-ins list
+				// ===============================================================
+				else {
+					Collection<PluginInfo> l = pa.listPlugins();
+					vc.put("list", "plugins/list.html");
+					vc.put("pluginList", l);
+				}
+				}
+	}
