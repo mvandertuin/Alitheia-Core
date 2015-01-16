@@ -55,18 +55,18 @@
             <td class="head" style="width: 40%;">Description</td>
          </tr>
      </thead>
-     <tbody>	
-     	#if(!$metrics || $metrics.isEmpty())
+     <tbody>
+     	#if(!$PluginMetrics || $PluginMetrics.isEmpty())
      	<tr>
      		<td colspan="4" class="noattr">This plug-in does not support metrics.</td>
      	</tr>
      	#else
-     		#foreach($metric in $metrics)
+     		#foreach($pm in $PluginMetrics)
      			<tr>
-     				<td>$!metric.getId()</td>
-     				<td>$!metric.getMnemonic()</td>
-     				<td>$!metric.getMetricType().getType()</td>
-     				<td>$!metric.getDescription()</td>
+     				<td>$pm.getId()</td>
+     				<td>$pm.getMnemonic()</td>
+     				<td>$pm.getMetricType().getType()</td>
+     				<td>$pm.getDescription()</td>
      			</tr>
      		#end
      	#end

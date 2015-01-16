@@ -339,14 +339,16 @@ public class PluginsView extends Controller {
 		}
 
 		if ((selPI != null)) {
-			if ((selPI.installed)&&((reqValAction.equals(actValReqAddProp)) || (reqValAction.equals(actValReqUpdProp)))) {
+			if ((selPI.installed)&&((reqValAction.equals(actValReqAddProp)) || (reqValAction
+					.equals(actValReqUpdProp)))) {
 				// ===============================================================
 				// "Create/update configuration property" editor
 				// ===============================================================
 				vc.put("createProperty", "plugins/createProperty.html");
 
 				// Check for a property update request
-				boolean update = selPI.hasConfProp(reqValPropName, reqValPropType);
+				boolean update = selPI.hasConfProp(reqValPropName,
+						reqValPropType);
 				vc.put("update", update);
 				vc.put("ConfigurationTypes", ConfigurationType.values());
 			} else {
@@ -354,18 +356,18 @@ public class PluginsView extends Controller {
 				// Plug-in editor
 				// ===============================================================
 				vc.put("pluginPage", "plugins/plugin.html");
-				if (selPI.installed) {
-					// Get the list of supported metrics
-					List<Metric> metrics = pa.getPlugin(selPI)
-							.getAllSupportedMetrics();
-					vc.put("metrics", metrics);
+					if (selPI.installed) {
+						// Get the list of supported metrics
+						List<Metric> metrics = pa.getPlugin(selPI)
+								.getAllSupportedMetrics();
+						vc.put("PluginMetrics", metrics);
 
-					// Get the plug-in's configuration set
-					Set<PluginConfiguration> config = Plugin
-							.getPluginByHashcode(selPI.getHashcode())
-							.getConfigurations();
-					vc.put("pluginConfigs", config);
-				}
+						// Get the plug-in's configuration set
+						Set<PluginConfiguration> config = Plugin
+								.getPluginByHashcode(selPI.getHashcode())
+								.getConfigurations();
+						vc.put("pluginConfigs", config);
+					}
 			}
 
 		}
