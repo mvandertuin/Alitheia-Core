@@ -173,17 +173,17 @@ public class SpringApplication {
 
     @Bean
     WebAdminRenderer webAdminRenderer() {
-        return new WebAdminRenderer(bundleContext(), velocityContext());
+        return new WebAdminRenderer(bundleContext());
     }
 
     @Bean
     PluginsView pluginsView() {
-        return new PluginsView(bundleContext(), velocityContext());
+        return new PluginsView(bundleContext());
     }
 
     @Bean
-    ProjectsView projectsView() {
-        return new ProjectsView(bundleContext(), velocityContext());
+    ProjectsController projectsView() {
+        return new ProjectsController(bundleContext());
     }
 
     @Bean
