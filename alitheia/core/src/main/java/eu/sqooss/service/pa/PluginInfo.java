@@ -152,7 +152,11 @@ public class PluginInfo implements Comparable<PluginInfo> {
      */
     public boolean installed = false;
 
-    /**
+    public boolean getInstalled() {
+		return installed;
+	}
+
+	/**
      * Empty constructor.
      */
     public PluginInfo() {

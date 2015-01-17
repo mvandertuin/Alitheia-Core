@@ -89,7 +89,6 @@ public class AlitheiaCore {
 
     /**
      * Simple constructor.
-     *
      */
     public AlitheiaCore() {
         instance = this;

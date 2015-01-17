@@ -4,15 +4,15 @@ import eu.sqooss.core.AlitheiaCore;
 import eu.sqooss.impl.service.admin.AdminServiceImpl;
 import eu.sqooss.impl.service.cluster.ClusterNodeServiceImpl;
 import eu.sqooss.impl.service.db.DBServiceImpl;
-import eu.sqooss.impl.service.fds.FDSServiceImpl;
 import eu.sqooss.impl.service.logging.LogManagerImpl;
-import eu.sqooss.impl.service.metricactivator.MetricActivatorImpl;
-import eu.sqooss.impl.service.pa.PAServiceImpl;
 import eu.sqooss.impl.service.rest.ResteasyServiceImpl;
 import eu.sqooss.impl.service.scheduler.SchedulerServiceImpl;
 import eu.sqooss.impl.service.tds.TDSServiceImpl;
 import eu.sqooss.impl.service.updater.UpdaterServiceImpl;
-import eu.sqooss.impl.service.webadmin.*;
+import eu.sqooss.impl.service.webadmin.AdminServlet;
+import eu.sqooss.impl.service.webadmin.PluginsView;
+import eu.sqooss.impl.service.webadmin.ProjectsController;
+import eu.sqooss.impl.service.webadmin.WebAdminRenderer;
 import eu.sqooss.service.admin.AdminService;
 import eu.sqooss.service.cluster.ClusterNodeService;
 import eu.sqooss.service.db.DBService;
@@ -24,8 +24,8 @@ import eu.sqooss.service.rest.RestService;
 import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.tds.TDSService;
 import eu.sqooss.service.updater.UpdaterService;
-import org.apache.commons.io.FileUtils;
 import eu.sqooss.service.webadmin.WebadminService;
+import org.apache.commons.io.FileUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.osgi.framework.BundleContext;
@@ -35,13 +35,14 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Properties;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * Spring Test Configuration
@@ -178,12 +179,12 @@ public class SpringTestApplication {
     }
 
     @Bean
-    ProjectsView projectsView() {
-        return mock(ProjectsView.class);
+    ProjectsController projectsView() {
+        return mock(ProjectsController.class);
     }
 
     @Bean
-    // TODO: refactor to remove parameters
+    // TODO: refacow tor to remove parameters
     // Maybe create AdminServlet in WebadminService-postconstruct to avoid circular dependency.
     public AdminServlet adminServlet(Logger logger, VelocityEngine ve, WebadminService webadminService) {
         return mock(AdminServlet.class);

@@ -1,0 +1,82 @@
+<fieldset>
+	<legend>
+		#if($update)
+		Update property of 
+		#else
+		Create property for 
+		#end
+		$plugin.getPluginName()
+    </legend>
+
+    <table class="borderless">
+    <tr>
+    	<td class="borderless" style="width:100px;">
+    		<b>Name</b>
+    	</td>
+    	<td class="borderless">
+    		#if($update)
+    		$!reqValPropName
+    		#else
+    		<input type="text" class="form" id="$reqParPropName" name="$reqParPropName" value="$!reqValPropName">
+			#end
+    	</td>
+    </tr>
+	<tr>
+		<td class="borderless" style="width:100px;">
+    		<b>Description</b>
+    	</td>
+    	<td class="borderless">
+    		#if($update)
+    		$!reqValPropDescr
+    		#else
+    		<input type="text" class="form" id="$reqParPropDescr" name="$reqParPropDescr" value="$!reqValPropDescr">
+			#end
+    	</td>
+    </tr>
+    <tr>
+		<td class="borderless" style="width:100px;">
+    		<b>Type</b>
+    	</td>
+    	<td class="borderless">
+    		#if($update)
+    		$!reqValPropType
+    		#else
+			<select class="form" id="$reqParPropType" name="$reqParPropType">
+				#foreach($type in $ConfigurationTypes)
+					<option value="$type.toString()" 
+						#if ($type.toString().equals($!reqValPropType))
+						"selected"
+						#end
+					>
+					$type.toString()
+					</option>
+				#end
+			</select>
+			#end
+		</td>
+	</tr>
+	<tr>
+		<td class="borderless" style="width:100px;">
+    		<b>Value</b>
+    	</td>
+    	<td class="borderless">
+    		<input type="text" class="form" id="$reqParPropValue" name="$reqParPropValue" value="$!reqValPropValue">
+    	</td>
+    </tr>	
+    <tr>
+		<td colspan="2" class="borderless">
+    		<input type="button" class="install" style="width:100px;" value=
+    		#if($update)
+    		"Update"
+    		#else
+    		"Create"
+    		#end
+    		 onclick="javascript:document.getElementById('$reqParAction').value='$actValConAddProp';document.metrics.submit();">&nbsp;
+			#if($update)
+			<input type="button" class="install" style="width:100px;" value="Remove" onclick="javascript:document.getElementById('$reqParAction').value='$actValConRemProp';document.metrics.submit();">&nbsp;
+			#end
+			<input type="button" class="install" style="width:100px;" value="Cancel" onclick="javascript:document.metrics.submit();">						
+    	</td>
+    </tr>
+    </table>
+ </fieldset>	

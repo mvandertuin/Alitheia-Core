@@ -1,0 +1,30 @@
+#macro( row_info $title $value )
+<tr>
+    <td class="borderless" style="width: 100px;">
+        <b>$title</b>
+    </td>
+    <td class="borderless">$!value</td>
+</tr>
+#end
+
+#macro( row_input $title $name $value )
+<tr>
+    <td class="borderless" style="width: 100px;">
+        <b>$title</b>
+    </td>
+    <td class="borderless">
+        <input type="text" class="form" id="$name" name="$name" value="$!value" size="60">
+    </td>
+</tr>
+#end
+
+#macro( table $table )
+    #foreach($row in $table.rows)
+        #if($row.class.simpleName.equals("InfoRow"))
+            #row_info($row.title, $row.value)
+        #end
+        #if($row.class.simpleName.equals("InputRow"))
+            #row_input($row.title, $row.name, $row.value)
+        #end
+    #end
+#end
