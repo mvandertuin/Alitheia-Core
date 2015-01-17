@@ -179,12 +179,12 @@ public class ProjectsController extends Controller {
 
     private Table projectTable(HttpServletRequest req){
         return new Table(
-            new InputRow("Project name",    "projectName",      req.getParameter(REQ_PAR_PRJ_NAME)),
-            new InputRow("Homepage",        "projectHomepage",  req.getParameter(REQ_PAR_PRJ_WEB )),
-            new InputRow("Contact e-mail",  "projectContact",   req.getParameter(REQ_PAR_PRJ_CONT)),
-            new InputRow("Bug database",    "projectBL",        req.getParameter(REQ_PAR_PRJ_BUG )),
-            new InputRow("Mailing list",    "projectML",        req.getParameter(REQ_PAR_PRJ_MAIL)),
-            new InputRow("Source code",     "projectSCM",       req.getParameter(REQ_PAR_PRJ_CODE))
+            new InputRow("Project name",   REQ_PAR_PRJ_NAME, req.getParameter(REQ_PAR_PRJ_NAME)),
+            new InputRow("Homepage",       REQ_PAR_PRJ_WEB,  req.getParameter(REQ_PAR_PRJ_WEB )),
+            new InputRow("Contact e-mail", REQ_PAR_PRJ_CONT, req.getParameter(REQ_PAR_PRJ_CONT)),
+            new InputRow("Bug database",   REQ_PAR_PRJ_BUG,  req.getParameter(REQ_PAR_PRJ_BUG )),
+            new InputRow("Mailing list",   REQ_PAR_PRJ_MAIL, req.getParameter(REQ_PAR_PRJ_MAIL)),
+            new InputRow("Source code",    REQ_PAR_PRJ_CODE, req.getParameter(REQ_PAR_PRJ_CODE))
         );
     }
 
