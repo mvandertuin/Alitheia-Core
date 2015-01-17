@@ -34,15 +34,19 @@
 package eu.sqooss.impl.service.webadmin;
 
 import com.google.inject.assistedinject.Assisted;
+
 import eu.sqooss.service.logging.LogManager;
 import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.util.StringUtils;
+
 import org.apache.velocity.VelocityContext;
 import org.joda.time.Period;
 import org.osgi.framework.BundleContext;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -71,6 +75,7 @@ public class WebAdminRenderer  extends Controller {
                             Scheduler sched, LogManager logManager) {
         super(bundlecontext);
         this.sched = sched;
+        
         this.logManager = logManager;
     }
 
@@ -94,18 +99,14 @@ public class WebAdminRenderer  extends Controller {
     {
         vc.put("section", 2);
         String[] names = logManager.getRecentEntries();
-        StringBuilder b = new StringBuilder("<h2>Alitheia Logs</h2><ul class=\"logs\">");
-
-        if ((names != null) && (names.length > 0)) {
-            for (String s : names) {
-                b.append("<li>" + StringUtils.makeXHTMLSafe(s) + "</li>");
-            }
-        } else {
-            b.append("<li>&lt;none&gt;</li>");
+        if(names != null){
+        	String[] safeNames = new String[names.length];
+        	for(int i = 0; i<names.length; i++){
+        		safeNames[i] = StringUtils.makeXHTMLSafe(names[i]);
+        	}
+        	vc.put("safeNames", safeNames);
         }
-
-        b.append("</ul>");
-        vc.put("body", b.toString());
+        vc.put(SUBTEMPLATE, "logs.html");
     }
 
     /**

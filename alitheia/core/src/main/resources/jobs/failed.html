@@ -11,16 +11,16 @@
         </thead>
         <tbody>
         #set($q = $sched.getFailedQueue())
-        #if($q.length<1)
-        <tr><td colspan="4">No failed jobs.</td></tr>
+        #if(!$q || $q.size()<1)
+        	<tr><td colspan="4">No failed jobs.</td></tr>
         #else
-        #foreach($job in $q)
+        	#foreach($job in $q)
             <tr>
                 <td>
                     #if($job)
                         $job
                     #else
-                    N/A
+                    	<b>N/A</b>
                     #end
                 </td>
                 <td>
@@ -28,29 +28,29 @@
                     #if($e)
                         ${e.Class.Package.Name}. ${e.Class.SimpleName}
                     #else
-                    N/A
+                    	<b>N/A</b>
                     #end
                 </td>
                 <td>
                     #if($e.Message)
-                    ${e.Message}
+                    	${e.Message}
                     #else
-                    N/A
+                    	<b>N/A</b>
                     #end
                 </td>
                 <td>
                     #if($e.StackTrace)
-                    #foreach($line in $e.StackTrace)
-                        ${line.ClassName}. ${line.MethodName}(), (${line.FileName}:${line.LineNumber})
-                    #end
+                    	#foreach($line in $e.StackTrace)
+                        	${line.ClassName}. ${line.MethodName}(), (${line.FileName}:${line.LineNumber})
+                    	#end
                     #else
-                    N/A
+                    	<b>N/A</b>
                     #end
                     <div id="end"></div>
                 </td>
             </tr>
         #end
         #end
-
+	</tbody>
     </table>
 </div>

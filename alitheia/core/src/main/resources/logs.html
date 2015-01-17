@@ -1,0 +1,10 @@
+<h2>Alitheia Logs</h2>
+<ul class="logs">
+	#if($safeNames.size() > 0)
+		#foreach($name in $safeNames)
+			<li>$name</li>
+		#end
+	#else
+		<li>&lt;none&gt;</li>
+	#end
+</ul>
