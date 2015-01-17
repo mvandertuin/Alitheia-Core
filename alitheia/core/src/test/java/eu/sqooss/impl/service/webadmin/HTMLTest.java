@@ -1,27 +1,77 @@
+/****************************************************************
+ * WARNING: THESE TEST REQUIRE JAVA 7u72 FOR POWERMOCK TO WORK! *
+ * see https://code.google.com/p/powermock/issues/detail?id=504 *
+ ****************************************************************/
 package eu.sqooss.impl.service.webadmin;
 
+import eu.sqooss.core.AlitheiaCore;
+import eu.sqooss.service.admin.AdminService;
+import eu.sqooss.service.cluster.ClusterNodeService;
+import eu.sqooss.service.db.DBService;
+import eu.sqooss.service.logging.LogManager;
 import eu.sqooss.service.logging.Logger;
+import eu.sqooss.service.metricactivator.MetricActivator;
+import eu.sqooss.service.pa.PluginAdmin;
+import eu.sqooss.service.scheduler.Scheduler;
+import eu.sqooss.service.updater.UpdaterService;
 import junit.framework.Assert;
 import junit.framework.ComparisonFailure;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.osgi.framework.BundleContext;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class HTMLTest {
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(AlitheiaCore.class)
+abstract public class HTMLTest {
+
+    protected AlitheiaCore core;
+    protected @Mock BundleContext bundle;
+    protected @Mock LogManager lm;
+    protected @Mock DBService dbService;
+    protected @Mock PluginAdmin pa;
+    protected @Mock AdminService as;
+    protected @Mock MetricActivator ma;
+    protected @Mock ClusterNodeService cns;
+    protected @Mock Scheduler sched;
+    protected @Mock UpdaterService updsrv;
+
+    /**
+     * This is unneeded after adding in DI,
+     * then just add @InjectMocks to whatever you need.
+     */
+    public void prepareWithoutDI(){
+        mockStatic(AlitheiaCore.class);
+        core = Mockito.mock(AlitheiaCore.class);
+        when(AlitheiaCore.getInstance()).thenReturn(core);
+        when(core.getAdminService()).thenReturn(as);
+        when(core.getClusterNodeService()).thenReturn(cns);
+        when(core.getDBService()).thenReturn(dbService);
+        when(core.getLogManager()).thenReturn(lm);
+        when(core.getMetricActivator()).thenReturn(ma);
+        when(core.getScheduler()).thenReturn(sched);
+        when(core.getUpdater()).thenReturn(updsrv);
+        when(core.getPluginAdmin()).thenReturn(pa);
+    }
+
     public VelocityEngine Engine(){
         VelocityEngine ve = null;
         try {
             ve = new VelocityEngine();
-            ve.setProperty("runtime.log.logsystem.class",
-                    "org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
-            ve.setProperty("runtime.log.logsystem.log4j.category",
-                    Logger.NAME_SQOOSS_WEBADMIN);
             ve.setProperty("velocimacro.library.autoreload", true);
             ve.setProperty("file.resource.loader.cache", false);
             String resourceLoader = "classpath";
@@ -62,4 +112,5 @@ public class HTMLTest {
 //            o += s.substring(i, Math.min(i+40, s.length()-1))+"\n";
         return s;//o;
     }
+
 }

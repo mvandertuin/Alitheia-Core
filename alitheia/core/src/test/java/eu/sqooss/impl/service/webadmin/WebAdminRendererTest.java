@@ -1,21 +1,21 @@
+/****************************************************************
+ * WARNING: THESE TEST REQUIRE JAVA 7u72 FOR POWERMOCK TO WORK! *
+ * see https://code.google.com/p/powermock/issues/detail?id=504 *
+ ****************************************************************/
 package eu.sqooss.impl.service.webadmin;
 
-import eu.sqooss.core.AlitheiaCore;
 import eu.sqooss.service.logging.LogManager;
 import eu.sqooss.service.scheduler.Job;
-import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.scheduler.SchedulerStats;
 
 import org.apache.velocity.VelocityContext;
-//import org.hamcrest.text.IsEqualIgnoringWhiteSpace;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import javax.servlet.http.HttpServletRequest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.util.*;
 
@@ -24,32 +24,29 @@ import static org.mockito.Mockito.*;
 /**
  * A test verifying that the HTML output is unchanged before and after the refactor.
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
 public class WebAdminRendererTest extends HTMLTest {
-    static long failid;
-    static long successid;
 
-    @InjectMocks AlitheiaCore core;
-    @InjectMocks WebAdminRenderer webAdmin;
-
+    WebAdminRenderer webAdmin;
     
     // Init mock instances here, otherwise null in inserted into the ProjectsView and AlitheiaCore
-    @Mock Scheduler sched;
-    @Mock LogManager lm;
-    @Mock HttpServletRequest req;
+    MockHttpServletRequest req = new MockHttpServletRequest();
     @Mock SchedulerStats s;
     
     VelocityContext vc;
-    
+
     @Before
-    public void setup(){
+    public void setup() {
+        prepareWithoutDI();
+
+        webAdmin = new WebAdminRenderer(null);
+
         vc = new VelocityContext();
         vc.put("tr",new TranslationProxy());
         vc.put("adminView", webAdmin);
         vc.put("scheduler", s);
-
     }
-    
+
     @Test
     public void testrenderJobFailStats(){
     	HashMap<String,Integer> fjobs = new HashMap<String,Integer>();

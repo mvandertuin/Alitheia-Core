@@ -1,50 +1,48 @@
+/****************************************************************
+ * WARNING: THESE TEST REQUIRE JAVA 7u72 FOR POWERMOCK TO WORK! *
+ * see https://code.google.com/p/powermock/issues/detail?id=504 *
+ ****************************************************************/
 package eu.sqooss.impl.service.webadmin;
 
-import eu.sqooss.core.AlitheiaCore;
 import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
-import eu.sqooss.service.db.*;
-import eu.sqooss.service.pa.PluginAdmin;
+import eu.sqooss.service.db.Metric;
+import eu.sqooss.service.db.MetricType;
+import eu.sqooss.service.db.Plugin;
+import eu.sqooss.service.db.PluginConfiguration;
 import eu.sqooss.service.pa.PluginInfo;
-
 import org.apache.velocity.VelocityContext;
-//import org.hamcrest.text.IsEqualIgnoringWhiteSpace;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.ServiceReference;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.*;
 
 /**
  * A test verifying that the HTML output is unchanged before and after the refactor.
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
 public class PluginsViewTest extends HTMLTest {
-    static long failid;
-    static long successid;
 
-    @InjectMocks AlitheiaCore core;
-    @InjectMocks PluginsView pluginsView;
-
+    PluginsView pluginsView;
     
     // Init mock instances here, otherwise null in inserted into the ProjectsView and AlitheiaCore
-    @Mock DBService dbService;
-    @Mock PluginAdmin pa;
+
     VelocityContext vc;
     
     MockHttpServletRequest request;
 
     @Before
     public void setup(){
+        prepareWithoutDI();
+
+        pluginsView = new PluginsView(null);
+
         vc = new VelocityContext();
         vc.put("tr",new TranslationProxy());
         vc.put("metrics",pluginsView);

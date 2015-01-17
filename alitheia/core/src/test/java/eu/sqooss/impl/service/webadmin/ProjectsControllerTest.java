@@ -1,52 +1,46 @@
+/****************************************************************
+ * WARNING: THESE TEST REQUIRE JAVA 7u72 FOR POWERMOCK TO WORK! *
+ * see https://code.google.com/p/powermock/issues/detail?id=504 *
+ ****************************************************************/
 package eu.sqooss.impl.service.webadmin;
 
-import eu.sqooss.core.AlitheiaCore;
+import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
 import eu.sqooss.service.admin.AdminAction;
-import eu.sqooss.service.admin.AdminService;
-import eu.sqooss.service.cluster.ClusterNodeService;
+import eu.sqooss.service.admin.actions.AddProject;
 import eu.sqooss.service.db.*;
-import eu.sqooss.service.pa.PluginAdmin;
 import eu.sqooss.service.pa.PluginInfo;
-import eu.sqooss.service.scheduler.Scheduler;
+import eu.sqooss.service.scheduler.SchedulerException;
 import eu.sqooss.service.updater.Updater;
 import eu.sqooss.service.updater.UpdaterService;
 import org.apache.velocity.VelocityContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import javax.mail.Store;
 import java.util.*;
 
+import static eu.sqooss.impl.service.webadmin.RegexMatcher.matches;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThat;
+import static org.junit.matchers.JUnitMatchers.containsString;
+import static org.junit.matchers.JUnitMatchers.either;
 import static org.mockito.Mockito.*;
 
 /**
  * A test verifying that the HTML output is unchanged before and after the refactor.
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
 public class ProjectsControllerTest extends HTMLTest {
-    static long failid;
-    static long successid;
 
-    @InjectMocks AlitheiaCore core;
-    @InjectMocks
+    public static final String ROOT_TEMPLATE = "projects.html";
     ProjectsController projectsController;
 
-    // Init mock instances here, otherwise null in inserted into the ProjectsView and AlitheiaCore
-    @Mock DBService dbService;
-    @Mock PluginAdmin pa;
-    @Mock AdminService as;
-    @Mock ClusterNodeService cns;
-    @Mock ProjectDeleteJobFactory pdjf;
     VelocityContext vc;
-    @Mock Scheduler shed;
-    @Mock UpdaterService updsrv;
 
     MockHttpServletRequest request;
     ClusterNode node;
@@ -54,6 +48,10 @@ public class ProjectsControllerTest extends HTMLTest {
 
     @Before
     public void setup(){
+        prepareWithoutDI();
+
+        projectsController = new ProjectsController(null);
+
         vc = new VelocityContext();
         vc.put("tr",new TranslationProxy());
         vc.put("projects", projectsController);
@@ -80,22 +78,91 @@ public class ProjectsControllerTest extends HTMLTest {
     public void testIndex() {
         projectsController.list(request, vc);
         String result = render(null, request, vc);
-        assertWhiteSpaceEqual(index, result);
+
+        assertThat(result, containsString("No projects found"));
+        assertThat(result, containsString("Run all on"));
+        assertThat(result, containsString("Refresh"));
     }
 
     @Test
-    public void testCreateFrom_AddProject() {
+    public void testAddProjectForm() {
         projectsController.add(request, vc);
-        String result = render(null, request, vc);
-        assertWhiteSpaceEqual(addProject, result);
+        vc.put("tr", new TranslationProxy());
+        Controller.initResources(Locale.ENGLISH);
+        String result = render(null, request, vc).replaceAll("\n"," ");
+
+        assertThat(result, matches(".*<input([^>]*)name=\"projectName\".*"));
+        assertThat(result, matches(".*<input [^>]* name=\\\"projectHomepage\".*"));
+        assertThat(result, matches(".*<input [^>]* name=\"projectContact\".*"));
+        assertThat(result, matches(".*<input [^>]* name=\"projectBL\".*"));
+        assertThat(result, matches(".*<input [^>]* name=\"projectSCM\".*"));
+        assertThat(result, matches(".*<input [^>]* value=.Add Project..*"));
     }
 
     @Test
-    public void testRemove(){
+    public void testAdd() throws Exception {
+        Map<String,String> parms = new HashMap<String,String>();
+        parms.put("projectName", "name");
+        parms.put("projectHomepage", "http://home.com");
+        parms.put("projectContact", "contact@example.org");
+        parms.put("projectBL", "bugzilla-xml://folder/bugs");
+        parms.put("projectSCM", "git-file://folder/source");
+        parms.put("projectML", "maildir://folder/mail");
+        request.addParameters(parms);
+
+        // Success example:
+        AddProject a = mock(AddProject.class);
+        Map<String,Object> map = mock(Map.class);
+        a.setArgs(map);
+        when(as.create(AddProject.MNEMONIC)).thenReturn(a);
+        when(a.hasErrors()).thenReturn(false);
+        a.result("result", "Project added successfully");
+        when(dbService.findObjectsByProperties(eq(StoredProject.class), anyMap())).thenReturn(Collections.singletonList(proj));
+
+        projectsController.addPost(request, vc);
+
+        verify(as).create(AddProject.MNEMONIC);
+        verify(a).hasErrors();
+
+        assertEquals(vc.get("subtemplate"), "projects/list.html");
+        verify(map, atLeast(6)).put(anyString(), anyString());
+        verify(as).execute(a);
+
+        String success = render(ROOT_TEMPLATE, request, vc);
+        assertThat(success, containsString("Project added successfully"));
+
+        // Failing example:
+        when(a.hasErrors()).thenReturn(true);
+        projectsController.addPost(request, vc);
+        assertEquals(vc.get("subtemplate"), "projects/add.html");
+        // Can't check html due to protected final'ness of .errors()
+        //when(a.errors()).thenReturn(Collections.singletonMap("error", (Object) "X went wrong"));
+    }
+
+    @Test
+    public void testDirAdd() {
+        AddProject a = mock(AddProject.class);
+        Map<String,Object> map = mock(Map.class);
+        when(as.create(AddProject.MNEMONIC)).thenReturn(a);
+        when(a.hasErrors()).thenReturn(false, true);
+        when(dbService.findObjectsByProperties(eq(StoredProject.class), anyMap())).thenReturn(Collections.singletonList(proj));
+
+        request.addParameter("dir", "anywhere");
+
+        String result;
+        projectsController.addDirectoryPost(request, vc);
+        result = render(ROOT_TEMPLATE, request, vc);
+        // Cant verify negative result due to final .errors()
+        projectsController.addDirectoryPost(request, vc);
+        result = render(ROOT_TEMPLATE, request, vc);
+        assertThat(result, containsString("Added project "));
+    }
+
+    @Test
+    public void testRemove() throws SchedulerException {
         request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
-        projectsController.deleteConfirm(request, vc);
-        String result = render(null, request, vc);
-        assertWhiteSpaceEqual(removeProject, result);
+        projectsController.deleteConfirmed(request, vc);
+        verify(sched).enqueue(any(ProjectDeleteJob.class));
     }
 
     @Test
@@ -111,8 +178,7 @@ public class ProjectsControllerTest extends HTMLTest {
         when(updater.descr()).thenReturn("updater-descr");
 
         projectsController.update(request, vc);
-        String result = render(null, request, vc);
-        assertWhiteSpaceEqual(updateProject, result);
+        verify(as, times(1)).execute(any(AdminAction.class));
     }
 
     @Test
@@ -146,8 +212,10 @@ public class ProjectsControllerTest extends HTMLTest {
         testShowLastAppliedVersion();
 
         projectsController.list(request, vc);
-        String result = render(null, request, vc);
-        assertWhiteSpaceEqual(projectList, result);
+        String result = render(null, request, vc).replaceAll("\n", " ");
+
+        assertThat(result, matches(".*<tr.*some-project.*LastCommit.*LastBug.*Yes.*localhost.*</tr>.*"));
+        assertThat(result, matches(".*<tr.*other.*n/a.*n/a.*No.*(local).*</tr>.*"));
     }
 
     @Test
@@ -163,34 +231,47 @@ public class ProjectsControllerTest extends HTMLTest {
 
         projectsController.list(request, vc);
         String result = render(null, request, vc);
-        assertWhiteSpaceEqual(showProject, result);
-    }
 
-    @Test
-    public void testAddProjectForm(){
-        projectsController.add(request, vc);
-        String result = render(null, request, vc);
-        assertWhiteSpaceEqual(addProjectForm, result);
+        assertThat(result, containsString("ProjName"));
+        assertThat(result, containsString("ProjWebsite"));
+        assertThat(result, containsString("ProjContactUrl"));
+        assertThat(result, containsString("ProjBTSUrl"));
+        assertThat(result, containsString("ProjMailUrl"));
+        assertThat(result, containsString("ProjSCMUrl"));
     }
 
     @Test
     public void testRemoveConfirmation(){
         request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
-
-        when(proj.getName()).thenReturn("ProjName");
-        when(proj.getWebsiteUrl()).thenReturn("ProjWebsite");
-        when(proj.getContactUrl()).thenReturn("ProjContactUrl");
-        when(proj.getBtsUrl()).thenReturn("ProjBTSUrl");
-        when(proj.getMailUrl()).thenReturn("ProjMailUrl");
-        when(proj.getScmUrl()).thenReturn("ProjSCMUrl");
-
         projectsController.deleteConfirm(request, vc);
         String result = render(null, request, vc);
-        assertWhiteSpaceEqual(removeProjectConfirmation, result);
+
+        assertThat(result, containsString("Delete project: some-project"));
+        assertThat(result, containsString("Are you sure"));
+        assertThat(result, containsString("Yes"));
+        assertThat(result, containsString("Cancel"));
+    }
+
+    @Test
+    public void testSync(){
+        request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
+        when(pa.getPluginInfo(eq("any"))).thenReturn(mock(PluginInfo.class));
+        when(pa.getPlugin(any(PluginInfo.class))).thenReturn(mock(AlitheiaPlugin.class));
+
+        // Fail
+        projectsController.sync(request, vc);
+        verify(ma, never()).syncMetric(any(AlitheiaPlugin.class), any(StoredProject.class));
+
+        // Success
+        request.addParameter("plugin", "any");
+        projectsController.sync(request, vc);
+        verify(ma).syncMetric(any(AlitheiaPlugin.class), any(StoredProject.class));
+
+        String result = render(null, request, vc);
     }
 
     public void testShowLastAppliedVersion(){
-        request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
+        //request.setParameter(ProjectsController.REQ_PAR_PROJECT_ID, "1");
 
         PluginInfo plugin = mock(PluginInfo.class);
         plugin.installed = true;
