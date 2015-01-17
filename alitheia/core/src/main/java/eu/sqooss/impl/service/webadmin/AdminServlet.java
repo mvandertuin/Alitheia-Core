@@ -116,12 +116,10 @@ public class AdminServlet extends HttpServlet {
         addStaticContent("/add_user.png", "image/x-png");
         addStaticContent("/edit.png", "image/x-png");
         addStaticContent("/jobs.png", "image/x-png");
-        addStaticContent("/rules.png", "image/x-png");
 
         // Create the template content map
         templateContent = new Hashtable<>();
         templateContent.put("/users", "users.html");
-        templateContent.put("/rules", "rules.html");
         templateContent.put("/jobstat", "jobstat.html");
 
         // Create the controller content map

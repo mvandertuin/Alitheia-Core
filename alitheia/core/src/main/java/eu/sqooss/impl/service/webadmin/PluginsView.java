@@ -55,9 +55,6 @@ public class PluginsView extends Controller {
 	private DBService db;
 	private MetricActivator ma;
 	private PluginAdmin pa;
-	
-	// Stores the accumulated error messages
-	StringBuilder e = new StringBuilder();
 
 	// Request parameters
 	String reqParAction = "action";
@@ -76,18 +73,11 @@ public class PluginsView extends Controller {
 	String actValReqUpdProp = "updateProperty";
 	String actValConAddProp = "confirmProperty";
 	String actValConRemProp = "removeProperty";
-	// Request values
-	String reqValAction = "";
-	String reqValHashcode = null;
-	String reqValPropName = null;
-	String reqValPropDescr = null;
-	String reqValPropType = null;
-	String reqValPropValue = null;
-	boolean reqValShowProp = false; // Show plug-in properties
-	boolean reqValShowActv = false; // Show plug-in activators
-	// Info object of the selected plug-in
-	PluginInfo selPI = null;
 
+	/**
+	 * Constructor for PluginsView
+	 * @param bundlecontext
+	 */
 	public PluginsView(BundleContext bundlecontext) {
 		super(bundlecontext);
 		db = AlitheiaCore.getInstance().getDBService();
@@ -95,21 +85,42 @@ public class PluginsView extends Controller {
 		pa = AlitheiaCore.getInstance().getPluginAdmin();
 	}
 
+	/**
+	 * Render method for a GET request from the index.html page
+	 * @param req The servletrequest
+	 * @param vc The velocitycontext object
+	 */
+	
 	@Action(uri = "/index", template = "index.html", method = "GET")
 	public void indexGet(HttpServletRequest req, VelocityContext vc) {
 		render(req, vc);
 	}
-
+	
+	/**
+	 * Render method for a POST request from the index.html page
+	 * @param req The servletrequest
+	 * @param vc The velocitycontext object
+	 */
 	@Action(uri = "/index", template = "index.html", method = "POST")
 	public void indexPost(HttpServletRequest req, VelocityContext vc) {
 		render(req, vc);
 	}
 
+	/**
+	 * Render method for a GET request from the homepage
+	 * @param req The servletrequest
+	 * @param vc The velocitycontext object
+	 */
 	@Action(uri = "/", template = "index.html", method = "GET")
 	public void homeGet(HttpServletRequest req, VelocityContext vc) {
 		render(req, vc);
 	}
 
+	/**
+	 * Render method for a POST request from the homepage
+	 * @param req The servletrequest
+	 * @param vc The velocitycontext object
+	 */
 	@Action(uri = "/", template = "index.html", method = "POST")
 	public void render(HttpServletRequest req, VelocityContext vc) {
 		//put request parameters to Velocity context
@@ -137,19 +148,12 @@ public class PluginsView extends Controller {
 
 		else {
 			//Set request parameters
+			PluginInfo selPI = null;
 			if (req != null) {
-				initializeRequest(req);
-			}
-            // Retrieve the selected plug-in's info object
-            if (reqValHashcode != null) {
-                selPI = pa.getPluginInfo(reqValHashcode);
-            }
-			// Plug-in info based actions
-			if ((selPI != null) && (selPI.installed)) {
-				intializeSelPI();
+				  selPI = initializeRequest(req,vc);
 			}
 			
-			generateHTML(vc);
+			generateHTML(vc,selPI);
 		}
 	}
 
@@ -163,14 +167,31 @@ public class PluginsView extends Controller {
 				.getProperty(Constants.OBJECTCLASS)), ",");
 	}
 	
-	private void initializeRequest(HttpServletRequest req){
+	/**
+	 * Method reads the several request parameters from req, initialize the selected Plugin and stores the parameters to the vc
+	 * @param req The servletrequest
+	 * @param vc The velocitycontext object
+	 * @return The Selected Plugin which is used to render the correct HTML page
+	 */
+	private PluginInfo initializeRequest(HttpServletRequest req, VelocityContext vc){	
+		// Stores the accumulated error messages
+		StringBuilder e = new StringBuilder();
+		// Request values
+		String reqValAction = "";
+		String reqValHashcode = null;
+		String reqValPropName = null;
+		String reqValPropDescr = null;
+		String reqValPropType = null;
+		String reqValPropValue = null;
+		boolean reqValShowProp = false; // Show plug-in properties
+		boolean reqValShowActv = false; // Show plug-in activators
+
 		// ===============================================================
 		// Parse the servlet's request object
 		// ===============================================================
 		if(req!=null){
 			// Retrieve the selected editor's action (if any)
 			reqValAction = req.getParameter(reqParAction);
-
 
 			if (reqValAction == null) {
 				reqValAction = "";
@@ -190,6 +211,7 @@ public class PluginsView extends Controller {
 			reqValPropType = req.getParameter(reqParPropType);
 			reqValPropValue = req.getParameter(reqParPropValue);
 			reqValHashcode = req.getParameter(reqParHashcode);
+			
 			// Plug-in based actions
 			if (reqValHashcode != null) {
 				// =======================================================
@@ -219,10 +241,15 @@ public class PluginsView extends Controller {
 				}
 			}
 		}
-	}
+		
+		
+        // Retrieve the selected plug-in's info object
+		PluginInfo selPI = null;
+        if (reqValHashcode != null) {
+            selPI = pa.getPluginInfo(reqValHashcode);
+        }
 
-	private void intializeSelPI(){
-		if ((selPI != null) && (selPI.installed)) {
+        if ((selPI != null) && (selPI.installed)) {
 			// =======================================================
 			// Plug-in synchronize (on all projects) request
 			// =======================================================
@@ -261,8 +288,12 @@ public class PluginsView extends Controller {
 			// =======================================================
 			else if (reqValAction.equals(actValConAddProp)) {
 				// Check for a property update
-				boolean update = selPI.hasConfProp(reqValPropName,
-						reqValPropType);
+				boolean update = false;
+				try{
+					update = selPI.hasConfProp(reqValPropName,reqValPropType);
+				}
+				catch(Exception E){}
+						
 				// Update configuration property
 				if (update) {
 					try {
@@ -307,13 +338,21 @@ public class PluginsView extends Controller {
 				}
 			}
 		}
-	}
-	
-	private void generateHTML(VelocityContext vc){ 
-		// ===============================================================
-		// Create the form
-		// ===============================================================
-
+        
+        if(e.length()>0){
+			vc.put("errors", e);
+		}
+		if (selPI != null && selPI.installed &&
+				((reqValAction.equals(actValReqAddProp)) || reqValAction.equals(actValReqUpdProp))){
+					boolean update=false;
+					try{
+						update = (selPI.hasConfProp(reqValPropName, reqValPropType));
+					}
+					catch(Exception E){}
+			vc.put("update",update);
+		}
+        
+        
 		vc.put("reqValAction", reqValAction);
 		vc.put("reqValHashcode", reqValHashcode);
 		vc.put("reqValPropName", reqValPropName);
@@ -321,33 +360,42 @@ public class PluginsView extends Controller {
 		vc.put("reqValPropType", reqValPropType);
 		vc.put("reqValPropValue", reqValPropValue);
 		vc.put("reqValShowProp", reqValShowProp);
-		vc.put("reqValShowActv", reqValShowActv);
+		vc.put("reqValShowActv", reqValShowActv);	
+		return selPI;
+	}
+	
+	/**
+	 * Puts the correct HTML pages to the vc according to reqValAction servlet request (action)parameter which should
+	 * be set in the vc beforehand
+	 * @param vc The VelocityContext object
+	 * @param selPI The selected plugin (if any)
+	 */
+	private void generateHTML(VelocityContext vc,PluginInfo selPI){ 
+		if (selPI != null) {
+			vc.put("plugin", selPI);
+		}
+		
+		// ===============================================================
+		// Create the form
+		// ===============================================================
 		vc.put("content","plugins/content.html");
 		// ===============================================================
 		// Display the accumulated error messages (if any)
 		// ===============================================================
-		if(e.length()>0){
-			vc.put("errors", e);
+		if(vc.containsKey("errors")){
 			vc.put("errorList", "plugins/errors.html");
 		}
 
-		// Set the selected plugin to VC
-		if (selPI != null) {
-			vc.put("plugin", selPI);
-		}
-
 		if ((selPI != null)) {
-			if ((selPI.installed)&&((reqValAction.equals(actValReqAddProp)) || (reqValAction
+			if ((selPI.installed)&&((vc.get("reqValAction").equals(actValReqAddProp)) || (vc.get("reqValAction")
 					.equals(actValReqUpdProp)))) {
 				// ===============================================================
 				// "Create/update configuration property" editor
 				// ===============================================================
+			
 				vc.put("createProperty", "plugins/createProperty.html");
 
 				// Check for a property update request
-				boolean update = selPI.hasConfProp(reqValPropName,
-						reqValPropType);
-				vc.put("update", update);
 				vc.put("ConfigurationTypes", ConfigurationType.values());
 			} else {
 				// ===============================================================
