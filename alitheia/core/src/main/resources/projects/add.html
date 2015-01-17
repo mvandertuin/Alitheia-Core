@@ -1,0 +1,20 @@
+#parse("macros.html")
+
+<fieldset>
+    <legend>Add Project</legend>
+    <form action="/projects_add" method="post">
+    <table class="borderless">
+        #table($form)
+        <tr>
+            <td colspan="2" class="borderless">
+                <input type="submit" class="install" style="width:100px" value='$tr.label("project_add")'>
+                <button type="button" class="install" style="width:100px" onclick="window.history.back()">$tr.label("cancel")</button>
+            </td>
+        </tr>
+    </table>
+    </form>
+</fieldset>
+
+## Only print help if we're doing an addProject
+<h2>$tr.label("help")</h2>
+$tr.message("project_help")

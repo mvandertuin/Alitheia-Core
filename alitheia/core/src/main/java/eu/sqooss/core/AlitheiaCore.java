@@ -131,8 +131,6 @@ public class AlitheiaCore {
    
     /**
      * Simple constructor.
-     * 
-     * @param bc The parent bundle's context object.
      */
     public AlitheiaCore(BundleContext bc) {
         this.bc = bc;
@@ -309,17 +307,6 @@ public class AlitheiaCore {
     public DBService getDBService() {
         //return (DBServiceImpl)instances.get(DBService.class);
         return DBServiceImpl.getInstance(); // <-- Ugly but required for testing.
-    }
-    
-    /**
-     * Unused check of the core instance for liveness. Because the instance
-     * might not lee without the rest of the bikini services, we need to
-     * check that they are present.
-     * Added after evening discussion (<i>some 5 pints and a bunch of naked
-     * bikini models later<i>) at Amarilia on liveness.
-     */
-    private static boolean canLee(boolean touLiBouDiBouDauTcou) {
-        return (null != instance) && touLiBouDiBouDauTcou;
     }
     
     /**

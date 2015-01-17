@@ -1,0 +1,17 @@
+#if($errors)
+<fieldset>
+    <legend>Errors</legend>
+    #foreach($m in $errors)
+    $m
+    #end;
+</fieldset>
+#end
+
+#if($results)
+<fieldset>
+    <legend>Message</legend>
+    #foreach($m in $results)
+    $m
+    #end;
+</fieldset>
+#end
