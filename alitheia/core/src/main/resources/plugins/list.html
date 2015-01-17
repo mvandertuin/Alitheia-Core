@@ -1,99 +1,65 @@
-	<fieldset>
-		<legend>All plug-ins</legend>
-		<table>
-		<thead>
-        	<tr class="head">
-            	<td class="head" style="width: 80px;">Status</td>
-            	<td class="head" style="width: 30%;">Name</td>
-            	<td class="head" style="width: 40%;">Class</td>
-            	<td class="head">Version</td>
-           	</tr>
-        </thead>
-        <tbody>
-        #foreach($i in $pluginList)
-        	#if(!$i.getInstalled())
-        		<tr class="edit" onclick="javascript:document.getElementById('$!reqParHashcode').value='$!i.getHashcode()';document.metrics.submit();">
-                      <td class="trans"><img src="/edit.png" alt="[Edit]"/>&nbsp;Registered</td>
-                      <td class="trans">$!i.getPluginName()</td>
-                      <td class="trans">$!metrics.getPluginClass($i)</td>
-                      <td class="trans">$!i.getPluginVersion()</td>
-                </tr>
-                #if($reqValShowProp)
-                	#if($i.getConfiguration() && !$i.getConfiguration().isEmpty())
-                		#foreach($p in $i.getConfiguration())
-                			<tr>
-                				<td>&nbsp;</td>
-                				<td colspan="3" class="attr">
-                					<b>Property:</b>$!p.getName()
-                					&nbsp;<b>Type:</b>$!p.getType()                					
-                					&nbsp;<b>Value:</b>$!p.getValue()
-                				</td>
-                			</tr>
-                		#end
-                	#end
-                #end
-                #if($reqValShowActv)
-                	#if($i.getActivationTypes())
-                		#foreach($a in $i.getActivationTypes())
-                			<tr>
-                				<td>&nbsp;</td>
-                				<td colspan="3" class="attr">
-                					<b>Activator:</b>$!a.getName()
-                				</td>
-                			</tr>
-                		#end
-                	#end           
-        		#end
-        	#end
-        #end
-        #foreach($i in $pluginList)
-        	#if($i.getInstalled())
-        		<tr class="edit" onclick="javascript:document.getElementById('$!{reqParHashcode}').value='$!i.getHashcode()';document.metrics.submit();">
-                      <td class="trans"><img src="/edit.png" alt="[Edit]"/>&nbsp;Installed</td>
-                      <td class="trans">$!i.getPluginName()</td>
-                      <td class="trans">$!metrics.getPluginClass($i)</td>
-                      <td class="trans">$!i.getPluginVersion()</td>
-                </tr>
-                #if($reqValShowProp)
-                	#if($i.getConfiguration() && !$i.getConfiguration().isEmpty())
-                		#foreach($p in $i.getConfiguration())
-                			<tr>
-                				<td>&nbsp;</td>
-                				<td colspan="3" class="attr">
-                					<b>Property:</b>$!p.getName()
-                					&nbsp;<b>Type:</b>$!p.getType()                					
-                					&nbsp;<b>Value:</b>$!p.getValue()
-                				</td>
-                			</tr>
-                		#end
-                	#end
-                #end
-                #if($reqValShowActv)
-                	#if($i.getActivationTypes())
-                		#foreach($a in $i.getActivationTypes())
-                			<tr>
-                				<td>&nbsp;</td>
-                				<td colspan="3" class="attr">
-                					<b>Activator:</b>$!a.getName()
-                				</td>
-                			</tr>
-                		#end
-                	#end           
-        		#end
-        	#end
-        #end
-        </tbody>
-        </table>
-        <span>
-        	<input type="checkbox" 
-        		#if($reqValShowProp)
-        		checked
-        		#end
-        		onclick="javascript:document.getElementById('$reqParShowProp').value = this.checked;document.getElementById('$reqParHashcode').value='';document.metrics.submit();">Display properties
-            <input type="checkbox" 
-            	#if($reqValShowActv)
-        		checked
-        		#end
-            	onclick="javascript:document.getElementById('$reqParShowActv').value = this.checked;document.getElementById('$reqParHashcode').value='';document.metrics.submit();">Display activators
-         </span>
-         </fieldset>
+<fieldset>
+	<legend>All plug-ins</legend>
+	<table>
+	<thead>
+		<tr class="head">
+			<td class="head" style="width: 80px;">Status</td>
+			<td class="head" style="width: 30%;">Name</td>
+			<td class="head" style="width: 40%;">Class</td>
+			<td class="head">Version</td>
+		</tr>
+	</thead>
+	<tbody>
+	#foreach($i in $pluginList)
+		<tr class="edit" onclick="javascript:document.getElementById('$!reqParHashcode').value='$!i.getHashcode()';document.metrics.submit();">
+			<td class="trans"><img src="/edit.png" alt="[Edit]"/>&nbsp;
+				#if($i.getInstalled()) Installed #else Registered #end
+			</td>
+			<td class="trans">$!i.getPluginName()</td>
+			<td class="trans">$!metrics.getPluginClass($i)</td>
+			<td class="trans">$!i.getPluginVersion()</td>
+		</tr>
+
+		#if($reqValShowProp)
+			#if($i.getConfiguration() && !$i.getConfiguration().isEmpty())
+				#foreach($p in $i.getConfiguration())
+				<tr>
+					<td>&nbsp;</td>
+					<td colspan="3" class="attr">
+						<b>Property:</b>$!p.getName()
+						&nbsp;<b>Type:</b>$!p.getType()
+						&nbsp;<b>Value:</b>$!p.getValue()
+					</td>
+				</tr>
+				#end
+			#end
+		#end
+
+		#if($reqValShowActv)
+			#if($i.getActivationTypes())
+				#foreach($a in $i.getActivationTypes())
+					<tr>
+						<td>&nbsp;</td>
+						<td colspan="3" class="attr">
+							<b>Activator:</b>$!a.getName()
+						</td>
+					</tr>
+				#end
+			#end
+		#end
+	#end
+	</tbody>
+	</table>
+	<span>
+		<input type="checkbox"
+			#if($reqValShowProp)
+			checked
+			#end
+			onclick="javascript:document.getElementById('$reqParShowProp').value = this.checked;document.getElementById('$reqParHashcode').value='';document.metrics.submit();">Display properties
+		<input type="checkbox"
+			#if($reqValShowActv)
+			checked
+			#end
+			onclick="javascript:document.getElementById('$reqParShowActv').value = this.checked;document.getElementById('$reqParHashcode').value='';document.metrics.submit();">Display activators
+	 </span>
+ </fieldset>

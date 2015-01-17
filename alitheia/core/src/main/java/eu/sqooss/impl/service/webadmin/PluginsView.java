@@ -48,9 +48,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class PluginsView extends Controller {
 
@@ -376,8 +374,14 @@ public class PluginsView extends Controller {
 		// ===============================================================
 		else {
 			Collection<PluginInfo> l = pa.listPlugins();
+
+			// Order by installed or not installed, otherwise don't touch ordering
+			Collection<PluginInfo> ordered = new ArrayList<>();
+			for(PluginInfo i : l) if(i.installed) ordered.add(i);
+			for(PluginInfo i : l) if(!i.installed) ordered.add(i);
+
 			vc.put("list", "plugins/list.html");
-			vc.put("pluginList", l);
+			vc.put("pluginList", ordered);
 		}
 	}
 }
