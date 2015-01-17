@@ -10,11 +10,10 @@
         </tr>
         </thead>
         <tbody>
-        #set($q = $sched.getFailedQueue())
-        #if(!$q || $q.size()<1)
+        #if(!$failed || $failed.size()<1)
         	<tr><td colspan="4">No failed jobs.</td></tr>
         #else
-        	#foreach($job in $q)
+        	#foreach($job in $failed)
             <tr>
                 <td>
                     #if($job)

@@ -75,6 +75,7 @@ public class WebAdminRenderer  extends Controller {
     public void action_index(HttpServletRequest req, VelocityContext vc)
     {
         vc.put("section", 4);
+        vc.put("stats", sched.getSchedulerStats());
         vc.put(SUBTEMPLATE, "jobs/index.html");
     }
 
@@ -82,7 +83,7 @@ public class WebAdminRenderer  extends Controller {
     public void action_failed(HttpServletRequest req, VelocityContext vc)
     {
         vc.put("section", 4);
-        vc.put("sched", sched);
+        vc.put("failed", sched.getFailedQueue());
         vc.put(SUBTEMPLATE, "jobs/failed.html");
     }
 
