@@ -3,7 +3,7 @@
  * compile time to the source, any OSS license (even GPL) will do.
  */
 
-package ${groupId}.${artifactId};
+package ${project.groupId}.${project.artifactId};
 
 import java.util.List;
 

@@ -8,12 +8,12 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>${groupId}</groupId>
-  <artifactId>${artifactId}</artifactId>
+  <groupId>${project.groupId}</groupId>
+  <artifactId>${project.artifactId}</artifactId>
   <version>${version}</version>  
   <packaging>bundle</packaging>
 
-  <name> ${groupId}.${artifactId} plugin (${version})</name>
+  <name> ${project.groupId}.${project.artifactId} plugin (${version})</name>
   
   <dependencies>
     <dependency>
@@ -46,12 +46,12 @@
           <instructions>
             <Embed-Dependency>*;scope=compile|runtime;artifactId=!core|org.osgi.core|org.osgi.compendium</Embed-Dependency>
 +           <Import-Package>*;resolution:=optional</Import-Package>
-            <Export-Package>${groupId}.${artifactId}</Export-Package>
-            <Bundle-Activator>${groupId}.${artifactId}.Activator</Bundle-Activator>
-            <Bundle-SymbolicName>${groupId}.${artifactId}</Bundle-SymbolicName>
+            <Export-Package>${project.groupId}.${project.artifactId}</Export-Package>
+            <Bundle-Activator>${project.groupId}.${project.artifactId}.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Version>${version}</Bundle-Version>
-            <Bundle-Vendor>${groupId}</Bundle-Vendor>
-            <Bundle-Description>${groupId}.${artifactId} SQO-OSS plugin</Bundle-Description>
+            <Bundle-Vendor>${project.groupId}</Bundle-Vendor>
+            <Bundle-Description>${project.groupId}.${project.artifactId} SQO-OSS plugin</Bundle-Description>
           </instructions>
         </configuration>
       </plugin>

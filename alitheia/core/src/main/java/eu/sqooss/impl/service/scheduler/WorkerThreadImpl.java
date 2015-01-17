@@ -80,6 +80,7 @@ class WorkerThreadImpl extends Thread implements WorkerThread {
     public WorkerThreadImpl(Scheduler s, boolean oneshot) {
     	super(null, null, "OneShot Worker Thread");
         m_scheduler = s;
+        m_oneshot = oneshot;
     }
 
     /**

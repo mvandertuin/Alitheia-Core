@@ -61,7 +61,7 @@ archetype creator does not do that for your
     <resources>
       <resource>
         <targetPath>eu/sqooss/service/db</targetPath>
-        <directory>src/main/java/${groupId}/${artifactId}/db</directory>
+        <directory>src/main/java/${project.groupId}/${project.artifactId}/db</directory>
         <includes>
           <include>**/*.xml</include>
         </includes>
